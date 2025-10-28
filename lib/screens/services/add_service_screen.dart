@@ -25,13 +25,6 @@ import '../../widgets/customTextField.dart';
 class AddServiceScreen extends ConsumerStatefulWidget {
   const AddServiceScreen({super.key});
 
-  // Statička metoda za navigaciju (bez carId)
-  static void navigate(BuildContext context) {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (ctx) => const AddServiceScreen()));
-  }
-
   @override
   ConsumerState<AddServiceScreen> createState() => _AddServiceScreenState();
 }
@@ -163,7 +156,7 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
           title: "Uspješno",
           message: "Servis je uspješno dodan.",
         );
-        Navigator.of(context).pop();
+        GoRouter.of(context).pop();
       }
     } catch (e) {
       CustomSnackbar.show(

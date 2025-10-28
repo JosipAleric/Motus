@@ -221,10 +221,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                             alignment: Alignment.centerRight,
                                             child:     TextButton(
                                               onPressed: () =>
-                                                  Navigator.pushReplacementNamed(
-                                                    context,
-                                                    '/login',
-                                                  ),
+                                                  GoRouter.of(context).go('/login',),
                                               child: const Text(
                                                 'Već imate račun? Prijavite se!',
                                                 style: TextStyle(

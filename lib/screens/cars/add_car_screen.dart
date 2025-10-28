@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:iconify_design/iconify_design.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -131,7 +132,7 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
         );
       }
 
-      Navigator.of(context).pop();
+      GoRouter.of(context).pop();
     } catch (e) {
       CustomSnackbar.show(
         context,
@@ -291,10 +292,9 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
                     children: [
                       Expanded(
                         child: CustomButton(
-                          onPressed: () => Navigator.of(context).pop(),
+                          onPressed: () => GoRouter.of(context).pop(),
                           text: 'Odustani',
                           icon: 'eva:close-circle-outline',
-                          isLoading: _isLoading,
                           padding: const EdgeInsets.symmetric(vertical: 15),
                           letterSpacing: 3,
                           borderRadius: 5.0,

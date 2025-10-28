@@ -50,6 +50,7 @@ class CustomTextField extends StatelessWidget {
 
           TextFormField(
             controller: controller,
+            textCapitalization: TextCapitalization.sentences,
             decoration: InputDecoration(
               suffixIcon: suffixText != null && suffixText!.isNotEmpty
                   ? Column(

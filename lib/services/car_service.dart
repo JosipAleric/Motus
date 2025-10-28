@@ -99,68 +99,68 @@ class CarService {
   // ============================
   // TOČENJE GORIVA
   // ============================
-
-  Stream<List<RefuelModel>> getRefuels(String userId, String carId) {
-    return _db
-        .collection('users')
-        .doc(userId)
-        .collection('cars')
-        .doc(carId)
-        .collection('refuels')
-        .orderBy('date', descending: true)
-        .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((d) => RefuelModel.fromMap(d.data(), d.id))
-              .toList(),
-        );
-  }
-
-  Future<void> addRefuel(
-    String userId,
-    String carId,
-    RefuelModel refuel,
-  ) async {
-    final ref = _db
-        .collection('users')
-        .doc(userId)
-        .collection('cars')
-        .doc(carId)
-        .collection('refuels')
-        .doc();
-    await ref.set(refuel.copyWith(id: ref.id).toMap());
-  }
-
-  Future<void> updateRefuel(
-    String userId,
-    String carId,
-    String refuelId,
-    RefuelModel refuel,
-  ) async {
-    final ref = _db
-        .collection('users')
-        .doc(userId)
-        .collection('cars')
-        .doc(carId)
-        .collection('refuels')
-        .doc(refuelId);
-    await ref.set(refuel.toMap(), SetOptions(merge: true));
-  }
-
-  Future<void> deleteRefuel(
-    String userId,
-    String carId,
-    String refuelId,
-  ) async {
-    final ref = _db
-        .collection('users')
-        .doc(userId)
-        .collection('cars')
-        .doc(carId)
-        .collection('refuels')
-        .doc(refuelId);
-    await ref.delete();
-  }
+  //
+  // Stream<List<RefuelModel>> getRefuels(String userId, String carId) {
+  //   return _db
+  //       .collection('users')
+  //       .doc(userId)
+  //       .collection('cars')
+  //       .doc(carId)
+  //       .collection('refuels')
+  //       .orderBy('date', descending: true)
+  //       .snapshots()
+  //       .map(
+  //         (snapshot) => snapshot.docs
+  //             .map((d) => RefuelModel.fromMap(d.data(), d.id))
+  //             .toList(),
+  //       );
+  // }
+  //
+  // Future<void> addRefuel(
+  //   String userId,
+  //   String carId,
+  //   RefuelModel refuel,
+  // ) async {
+  //   final ref = _db
+  //       .collection('users')
+  //       .doc(userId)
+  //       .collection('cars')
+  //       .doc(carId)
+  //       .collection('refuels')
+  //       .doc();
+  //   await ref.set(refuel.copyWith(id: ref.id).toMap());
+  // }
+  //
+  // Future<void> updateRefuel(
+  //   String userId,
+  //   String carId,
+  //   String refuelId,
+  //   RefuelModel refuel,
+  // ) async {
+  //   final ref = _db
+  //       .collection('users')
+  //       .doc(userId)
+  //       .collection('cars')
+  //       .doc(carId)
+  //       .collection('refuels')
+  //       .doc(refuelId);
+  //   await ref.set(refuel.toMap(), SetOptions(merge: true));
+  // }
+  //
+  // Future<void> deleteRefuel(
+  //   String userId,
+  //   String carId,
+  //   String refuelId,
+  // ) async {
+  //   final ref = _db
+  //       .collection('users')
+  //       .doc(userId)
+  //       .collection('cars')
+  //       .doc(carId)
+  //       .collection('refuels')
+  //       .doc(refuelId);
+  //   await ref.delete();
+  // }
 
   // 🔹 Izračunaj troškove po vremenskom periodu
   Future<Map<String, double>> getTotalExpenses({

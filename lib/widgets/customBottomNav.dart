@@ -13,7 +13,7 @@ class CustomBottomNav extends StatelessWidget {
   int _getSelectedIndex(BuildContext context) {
     final location = GoRouter.of(context).routeInformationProvider.value.location ?? '/';
     if (location.startsWith('/services')) return 1;
-    if (location.startsWith('/fuel')) return 3;
+    if (location.startsWith('/refuels')) return 3;
     if (location.startsWith('/profile')) return 4;
     return 0; // Home
   }
@@ -45,7 +45,7 @@ class CustomBottomNav extends StatelessWidget {
                 _buildNavItem(context, 'solar:home-bold-duotone', "Početna", 0, '/'),
                 _buildNavItem(context, 'f7:wrench-fill', "Servisi", 1, '/services'),
                 const SizedBox(width: 60), // prostor za centralni gumb
-                _buildNavItem(context, 'streamline-ultimate:trip-road', "Trip log", 3, '/fuel'),
+                _buildNavItem(context, 'streamline-ultimate:trip-road', "Trip log", 3, '/refuels'),
                 _buildNavItem(context, 'fluent:inprivate-account-24-filled', "Profil", 4, '/profile'),
               ],
             ),

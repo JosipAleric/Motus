@@ -280,7 +280,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 10),
                     TextButton(
                       onPressed: () =>
-                          Navigator.pushReplacementNamed(context, '/register'),
+                          GoRouter.of(context).go("/register"),
                       child: const Text(
                         'Nemate račun? Registrirajte se!',
                         style: TextStyle(

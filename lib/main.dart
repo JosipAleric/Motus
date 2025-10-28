@@ -7,6 +7,8 @@ import 'package:motus/screens/cars/add_car_screen.dart';
 import 'package:motus/screens/cars/car_details_screen.dart';
 import 'package:motus/screens/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:motus/screens/refuels/add_refuel_screen.dart';
+import 'package:motus/screens/refuels/refuels_screen.dart';
 import 'package:motus/widgets/customDrawer.dart';
 import 'firebase_options.dart';
 
@@ -28,9 +30,7 @@ class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
     notifyListeners();
     // Koristi se asBroadcastStream() da ne bi utjecao na originalni stream
-    _subscription = stream.asBroadcastStream().listen(
-          (_) => notifyListeners(),
-    );
+    _subscription = stream.asBroadcastStream().listen((_) => notifyListeners());
   }
 
   late final StreamSubscription<dynamic> _subscription;
@@ -47,7 +47,9 @@ class GoRouterRefreshStream extends ChangeNotifier {
 final _router = GoRouter(
   initialLocation: '/',
   // Koristi se za automatsko osvježavanje ruta kada se promijeni stanje auth-a
-  refreshListenable: GoRouterRefreshStream(FirebaseAuth.instance.authStateChanges()),
+  refreshListenable: GoRouterRefreshStream(
+    FirebaseAuth.instance.authStateChanges(),
+  ),
 
   routes: [
     // Rute bez Shell-a (autentifikacija)
@@ -74,7 +76,8 @@ final _router = GoRouter(
             GoRoute(
               path: '/add_car',
               name: 'add_car',
-              builder: (_, __) => const AddCarScreen())
+              builder: (_, __) => const AddCarScreen(),
+            ),
           ],
         ),
         GoRoute(
@@ -88,31 +91,53 @@ final _router = GoRouter(
               builder: (_, state) {
                 final serviceId = state.pathParameters['serviceId']!;
                 final carId = state.pathParameters['carId']!;
-                return ServiceDetailsScreen(
-                  serviceId: serviceId,
-                  carId: carId,
-                );
+                return ServiceDetailsScreen(serviceId: serviceId, carId: carId);
               },
             ),
           ],
         ),
-        GoRoute(path: '/fuel', name: 'fuel', builder: (_, __) => const HomeScreen()),
-        GoRoute(path: '/profile', name: 'profile', builder: (_, __) => const HomeScreen()),
-        GoRoute(path: '/add_service', name: 'add_service', builder: (_, __) => const AddServiceScreen()),
+        GoRoute(
+          path: '/refuels',
+          name: 'refuels',
+          builder: (_, __) => const RefuelsScreen(),
+          routes: [
+            GoRoute(
+              path: '/add_refuel/:carId',
+              name: 'add_refuel',
+              builder: (_, state) {
+                final carId = state.pathParameters['carId']!;
+                return AddRefuelScreen(carId: carId);
+              },
+            ),
+          ],
+        ),
+        GoRoute(
+          path: '/profile',
+          name: 'profile',
+          builder: (_, __) => const HomeScreen(),
+        ),
+        GoRoute(
+          path: '/add_service',
+          name: 'add_service',
+          builder: (_, __) => const AddServiceScreen(),
+        ),
       ],
     ),
   ],
   // Logika preusmjeravanja sada koristi ProviderScope za čitanje stanja korisnika
   redirect: (context, state) {
     // Čitanje stanja iz Riverpod ProviderScope-a
-    final userAsyncValue = ProviderScope.containerOf(context).read(authStateChangesProvider);
+    final userAsyncValue = ProviderScope.containerOf(
+      context,
+    ).read(authStateChangesProvider);
     final user = userAsyncValue.value;
 
     // Ako se stanje još uvijek učitava, ne preusmjeravaj
     if (userAsyncValue.isLoading) return null;
 
     final loggedIn = user != null;
-    final loggingIn = state.uri.toString() == '/login' || state.uri.toString() == '/register';
+    final loggingIn =
+        state.uri.toString() == '/login' || state.uri.toString() == '/register';
 
     // Ako korisnik nije logiran i pokušava pristupiti zaštićenoj ruti, idi na login
     if (!loggedIn && !loggingIn) return '/login';
@@ -126,9 +151,7 @@ final _router = GoRouter(
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   runApp(const ProviderScope(child: MyApp()));
 }
@@ -172,7 +195,7 @@ int getTabIndexFromLocation(String location) {
   final tabRoutes = {
     0: ['/'],
     1: ['/services'],
-    3: ['/fuel'],
+    3: ['/refuels'],
     4: ['/profile'],
   };
   for (var entry in tabRoutes.entries) {
@@ -200,7 +223,8 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
   void openDrawer() => _scaffoldKey.currentState?.openDrawer();
 
   void _updateSelectedIndex() {
-    final location = GoRouter.of(context).routeInformationProvider.value.location ?? '/';
+    final location =
+        GoRouter.of(context).routeInformationProvider.value.location ?? '/';
     final newIndex = getTabIndexFromLocation(location);
     if (_selectedIndex != newIndex) setState(() => _selectedIndex = newIndex);
   }
@@ -218,7 +242,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
         GoRouter.of(context).go('/services');
         break;
       case 3:
-        GoRouter.of(context).go('/fuel');
+        GoRouter.of(context).go('/refuels');
         break;
       case 4:
         GoRouter.of(context).go('/profile');
@@ -242,7 +266,6 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
       ref.read(drawerProvider.notifier).state = openDrawer;
     });
   }
-
 
   @override
   Widget build(BuildContext context) {

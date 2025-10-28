@@ -23,14 +23,14 @@ class _DrawerItem extends StatelessWidget {
   final bool isLogout;
 
   void _navigateAndClose(BuildContext context) {
-    Navigator.of(context).pop();
+    GoRouter.of(context).pop();
     GoRouter.of(context).go(route);
   }
 
   Future<void> _signOut(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
-    Navigator.of(context).pop();
-    //GoRouter.of(context).go('/login');
+    GoRouter.of(context).pop();
+    GoRouter.of(context).go('/login');
   }
 
   @override
@@ -191,7 +191,7 @@ class _DrawerHeaderContent extends StatelessWidget {
             right: 5,
             child: IconButton(
               icon: const Icon(Icons.close, color: AppColors.textSecondary),
-              onPressed: () => Navigator.of(context).pop(), // Closes the drawer
+              onPressed: () => GoRouter.of(context).pop(), // Closes the drawer
             ),
           ),
         ],

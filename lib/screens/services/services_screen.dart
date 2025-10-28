@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:motus/screens/services/service_details_screen.dart';
 import 'package:motus/widgets/customServiceCard.dart';
 import '../../models/car_model.dart';
@@ -67,6 +68,44 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          const SizedBox(width: 1),
+                          const Padding(
+                            padding: const EdgeInsets.only(top: 3),
+                            child: const IconifyIcon(
+                              icon: 'icon-park-outline:right',
+                              color: AppColors.textPrimary,
+                              size: 20,
+                            ),
+                          ),
+                          const SizedBox(width: 2),
+                          const Text(
+                            'Završeni servisi',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.black,
+                              fontFamily: "MPlus1",
+                              fontWeight: FontWeight.w400,
+                              letterSpacing: 1.2,
+                              shadows: [
+                                Shadow(
+                                  color: Colors.black54,
+                                  offset: Offset(0, 0),
+                                  blurRadius: 1,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                      _buildCarDropdown(carsAsync),
+                    ],
+                  ),
                   if (services.isEmpty)
                     const CustomAlert(
                       type: AlertType.info,
@@ -77,44 +116,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                const SizedBox(width: 1),
-                                const Padding(
-                                  padding: const EdgeInsets.only(top: 3),
-                                  child: const IconifyIcon(
-                                    icon: 'icon-park-outline:right',
-                                    color: AppColors.textPrimary,
-                                    size: 20,
-                                  ),
-                                ),
-                                const SizedBox(width: 2),
-                                const Text(
-                                  'Završeni servisi',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    color: Colors.black,
-                                    fontFamily: "MPlus1",
-                                    fontWeight: FontWeight.w400,
-                                    letterSpacing: 1.2,
-                                    shadows: [
-                                      Shadow(
-                                        color: Colors.black54,
-                                        offset: Offset(0, 0),
-                                        blurRadius: 1,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            _buildCarDropdown(carsAsync),
-                          ],
-                        ),
+
                         ListView.builder(
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
@@ -134,13 +136,9 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                                 price:
                                     '${service.price.toStringAsFixed(2)} BAM',
                                 onDetailsTap: () {
-                                  Navigator.of(context).push(
-                                    MaterialPageRoute(
-                                      builder: (context) => ServiceDetailsScreen(
-                                        serviceId: service.id,
-                                        carId: car.id,
-                                      ),
-                                    ),
+                                  GoRouter.of(context).pushNamed(
+                                    'service_details',
+                                    pathParameters: {'serviceId': service.id, 'carId': car.id},
                                   );
                                 },
                               ),
