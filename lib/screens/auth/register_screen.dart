@@ -124,8 +124,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       resizeToAvoidBottomInset: true,
       body: Container(
         color: AppColors.primary,
-        child: SafeArea(
-          child: LayoutBuilder(
+        child: LayoutBuilder(
             builder: (context, constraints) {
               return SingleChildScrollView(
                 padding: EdgeInsets.zero,
@@ -265,7 +264,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
             },
           ),
         ),
-      ),
     );
   }
 }

@@ -272,7 +272,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     return Scaffold(
       key: _scaffoldKey,
       drawer: const CustomDrawer(),
-      body: widget.child,
+      body: SafeArea(child: widget.child),
       bottomNavigationBar: CustomBottomNav(onItemTapped: _onItemTapped),
     );
   }
