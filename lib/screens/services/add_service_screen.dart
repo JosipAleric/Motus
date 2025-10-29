@@ -66,13 +66,12 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
     }
   }
 
-  Future<String?> _uploadInvoice(String serviceId) async {
+  Future<String?> _uploadInvoice(String serviceId, String userId) async {
     if (_pickedInvoice == null || _selectedCarId == null) return null;
     try {
-      final currentUserAsync = ref.read(currentUserStreamProvider).value;
-      if (currentUserAsync == null) return null;
-
-      final storageRef = FirebaseStorage.instance.ref().child('cars/${currentUserAsync?.uid}/$_selectedCarId/services/$serviceId/invoice.jpg');
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('users/$userId/cars/$_selectedCarId/services/$serviceId/invoice.jpg');
 
       await storageRef.putFile(File(_pickedInvoice!.path));
       return await storageRef.getDownloadURL();
@@ -134,19 +133,22 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
 
       String? invoiceUrl;
       if (_pickedInvoice != null) {
-        invoiceUrl = await _uploadInvoice(docRef.id);
+        // pass currentUser.uid instead of reading provider inside
+        invoiceUrl = await _uploadInvoice(docRef.id, currentUser.uid);
       }
 
       // Ažuriraj servis sa URL-om fakture ako postoji
       if (invoiceUrl != null) {
-        final updatedService = tempService.copyWith(id: docRef.id ?? '', invoiceUrl: invoiceUrl);
+        final updatedService = tempService.copyWith(id: docRef.id, invoiceUrl: invoiceUrl);
         await servicesProvider.updateService(currentUser.uid, _selectedCarId!, docRef.id, updatedService);
+
       }
 
       // Opcionalno: Ažuriranje kilometraže automobila
-      final currentCar = await carProvider.getCarOnce(currentUser.uid, _selectedCarId!);
-      if (currentCar != null && mileageValue > (currentCar.mileage ?? 0)) {
+      final currentCar = await carProvider.getCarById(currentUser.uid, _selectedCarId!);
+      if (currentCar != null && mileageValue > currentCar.mileage) {
         await carProvider.updateCarMileage(currentUser.uid, _selectedCarId!, mileageValue);
+        ref.invalidate(carDetailsProvider(_selectedCarId!));
       }
 
       if (mounted) {
@@ -156,6 +158,8 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
           title: "Uspješno",
           message: "Servis je uspješno dodan.",
         );
+        ref.invalidate(servicesForCarProvider(_selectedCarId!));
+        ref.invalidate(lastServiceWithCarProvider);
         GoRouter.of(context).pop();
       }
     } catch (e) {
@@ -182,7 +186,7 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUserAsync = ref.watch(currentUserStreamProvider);
+    final currentUserAsync = ref.watch(currentUserFutureProvider);
     final carsAsync = ref.watch(carsProvider);
 
     return currentUserAsync.when(

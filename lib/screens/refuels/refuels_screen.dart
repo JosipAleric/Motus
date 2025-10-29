@@ -43,54 +43,55 @@ class _RefuelsScreenState extends ConsumerState<RefuelsScreen> {
 
           _selectedCarId ??= cars.first.id;
 
-          // Pronađi trenutno odabrani automobil za prikaz marke/modela u listi točenja
           final selectedCar = cars.firstWhere((car) => car.id == _selectedCarId, orElse: () => cars.first);
 
-
-          return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          return SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                child: Column(
                   children: [
-                    _CarDropdown(
-                      cars: cars,
-                      selectedCarId: _selectedCarId!,
-                      onChanged: (value) {
-                        setState(() => _selectedCarId = value);
-                      },
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _CarDropdown(
+                          cars: cars,
+                          selectedCarId: _selectedCarId!,
+                          onChanged: (value) {
+                            setState(() => _selectedCarId = value);
+                          },
+                        ),
+                        SizedBox(
+                          height: 35,
+                          child: CustomButton(
+                            text: "Dodaj zapis",
+                            icon: "mdi:add",
+                            onPressed: () {
+                              if (_selectedCarId != null) {
+                                GoRouter.of(context).pushNamed(
+                                  'add_refuel',
+                                  pathParameters: {'carId': _selectedCarId!},
+                                );
+                              }
+                            },
+                            padding: const EdgeInsets.symmetric(horizontal: 15),
+                            fontSize: 10,
+                            iconSize: 15,
+                            borderRadius: 5,
+                          ),
+                        )
+                      ],
                     ),
-                    SizedBox(
-                      height: 35,
-                      child: CustomButton(
-                        text: "Dodaj zapis",
-                        icon: "mdi:add",
-                        onPressed: () {
-                          if (_selectedCarId != null) {
-                            GoRouter.of(context).pushNamed(
-                              'add_refuel',
-                              pathParameters: {'carId': _selectedCarId!},
-                            );
-                          }
-                        },
-                        padding: const EdgeInsets.symmetric(horizontal: 15),
-                        fontSize: 10,
-                        iconSize: 15,
-                        borderRadius: 5,
-                      ),
-                    )
+                    const SizedBox(height: 10),
+                    Container(
+                      child: _selectedCarId == null
+                          ? const Center(child: Text('Odaberi vozilo'))
+                          : RefuelsContent(carId: _selectedCarId!, selectedCar: selectedCar),
+                    ),
                   ],
                 ),
-                const SizedBox(height: 10),
-                Expanded(
-                  child: _selectedCarId == null
-                      ? const Center(child: Text('Odaberi vozilo'))
-                      : RefuelsContent(carId: _selectedCarId!, selectedCar: selectedCar),
-                ),
-              ],
-            ),
-          );
+              ),
+            );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Greška pri dohvaćanju auta: $e')),
@@ -116,9 +117,7 @@ class RefuelsContent extends ConsumerWidget {
         ref.invalidate(refuelsProvider(carId));
         ref.invalidate(refuelStatsProvider(carId));
       },
-      child: SingleChildScrollView(
-        physics: const AlwaysScrollableScrollPhysics(),
-        child: Column(
+      child:  Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Image.asset(
@@ -263,7 +262,6 @@ class RefuelsContent extends ConsumerWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }

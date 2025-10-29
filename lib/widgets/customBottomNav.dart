@@ -44,7 +44,7 @@ class CustomBottomNav extends StatelessWidget {
               children: [
                 _buildNavItem(context, 'solar:home-bold-duotone', "Početna", 0, '/'),
                 _buildNavItem(context, 'f7:wrench-fill', "Servisi", 1, '/services'),
-                const SizedBox(width: 60), // prostor za centralni gumb
+                const SizedBox(width: 60),
                 _buildNavItem(context, 'streamline-ultimate:trip-road', "Trip log", 3, '/refuels'),
                 _buildNavItem(context, 'fluent:inprivate-account-24-filled', "Profil", 4, '/profile'),
               ],

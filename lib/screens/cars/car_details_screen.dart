@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:motus/widgets/customAlert.dart';
 import 'package:motus/widgets/customAppBar.dart';
 import '../../providers/car_provider.dart';
@@ -144,7 +145,9 @@ class CarDetailsScreen extends ConsumerWidget {
                             height: 32,
                             child: CustomButton(
                               text: "Vidi sve",
-                              onPressed: () {},
+                              onPressed: () {
+                                GoRouter.of(context).goNamed('services');
+                              },
                               icon: "solar:arrow-right-broken",
                               fontSize: 11,
                               iconSize: 17,
@@ -185,11 +188,12 @@ class CarDetailsScreen extends ConsumerWidget {
                             description: service.type,
                             price: "${service.price.toStringAsFixed(0)} BAM",
                             onDetailsTap: () {
-                              CustomSnackbar.show(
-                                context,
-                                type: AlertType.success,
-                                title: "Uspješno!",
-                                message: "Vozilo je dodano u bazu.",
+                              GoRouter.of(context).pushNamed(
+                                'service_details',
+                                pathParameters: {
+                                  'carId': car.id,
+                                  'serviceId': service.id,
+                                },
                               );
                             },
                           );

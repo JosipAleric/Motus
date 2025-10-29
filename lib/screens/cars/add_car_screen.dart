@@ -56,11 +56,10 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
   }
 
   // Upload slike na Firebase Storage
-  Future<String?> _uploadImage(String carId) async {
+  Future<String?> _uploadImage(String carId, String userId) async {
     if (_pickedImage == null) return null;
     try {
-      final currentUserAsync = ref.read(currentUserStreamProvider).value;
-      final storageRef = FirebaseStorage.instance.ref().child('cars/${currentUserAsync?.uid}/$carId/image.jpg');
+      final storageRef = FirebaseStorage.instance.ref().child('users/$userId/cars/$carId/image.jpg');
 
       await storageRef.putFile(File(_pickedImage!.path));
       return await storageRef.getDownloadURL();
@@ -75,7 +74,6 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
     }
   }
 
-  // Spremanje auta
   Future<void> _saveCar(UserModel currentUser) async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedFuelType == null || _selectedTransmission == null) {
@@ -93,9 +91,8 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
     try {
       final carProvider = ref.read(carServiceProvider);
 
-      // Kreiraj privremeni auto object
       final tempCar = CarModel(
-        id: '', // Firestore će dodijeliti ID
+        id: '',
         brand: _brandController.text.trim(),
         model: _modelController.text.trim(),
         year: int.tryParse(_yearController.text.trim()) ?? 0,
@@ -114,8 +111,7 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
 
       String? imageUrl;
       if (_pickedImage != null) {
-        // docRef is non-nullable (addCar returns a non-null DocumentReference), so we can use it directly
-        imageUrl = await _uploadImage(docRef.id);
+        imageUrl = await _uploadImage(docRef.id, currentUser.uid);
       }
 
       if (imageUrl != null) {
@@ -130,9 +126,10 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
           title: "Uspjeh",
           message: "Vozilo je uspješno dodano.",
         );
+        ref.invalidate(carsProvider);
+        GoRouter.of(context).pop();
       }
 
-      GoRouter.of(context).pop();
     } catch (e) {
       CustomSnackbar.show(
         context,
@@ -162,7 +159,7 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentUserAsync = ref.watch(currentUserStreamProvider);
+    final currentUserAsync = ref.watch(currentUserFutureProvider);
 
     return currentUserAsync.when(
       data: (currentUser) {
@@ -397,75 +394,6 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
     );
   }
 
-  Widget _buildTextField(
-    TextEditingController controller,
-    String label,
-    String icon,
-    String hint, {
-    TextInputType keyboardType = TextInputType.text,
-    String? suffixText,
-    String? Function(String?)? validator,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              IconifyIcon(icon: icon, color: Color(0xFF4E4E4E), size: 20),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Color(0xFF4E4E4E),
-                  fontSize: 15,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: controller,
-            decoration: InputDecoration(
-              suffixIcon: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    suffixText ?? "",
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-              hintText: hint,
-              hintStyle: TextStyle(fontSize: 13, color: Colors.grey[500]),
-              contentPadding: const EdgeInsets.symmetric(
-                vertical: 15,
-                horizontal: 10,
-              ),
-              labelStyle: const TextStyle(
-                fontSize: 15,
-                color: Colors.grey,
-                fontWeight: FontWeight.w600,
-              ),
-              filled: true,
-              fillColor: Color(0xFFF9F9F9),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10.0),
-                borderSide: BorderSide(color: Color(0xFFEDEDED), width: 1.0),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(10.0),
-                borderSide: BorderSide(color: Color(0xFFCCCCCC), width: 1.0),
-              ),
-            ),
-            keyboardType: keyboardType,
-            validator: validator,
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildDropdown(
     String label,

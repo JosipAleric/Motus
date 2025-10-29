@@ -8,7 +8,7 @@ class CarService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   // Stream svih auta korisnika
-  Stream<List<CarModel>> getCarsForUser(String userId) {
+  Stream<List<CarModel>> getCarsForUserStream(String userId) {
     return _db
         .collection('users')
         .doc(userId)
@@ -23,7 +23,7 @@ class CarService {
   }
 
   // Stream za pojedinačni auto
-  Stream<CarModel?> getCarById(String userId, String carId) {
+  Stream<CarModel?> getCarByIdStream(String userId, String carId) {
     return _db
         .collection('users')
         .doc(userId)
@@ -36,8 +36,25 @@ class CarService {
         });
   }
 
-  // Dohvati auto jednom
-  Future<CarModel?> getCarOnce(String userId, String carId) async {
+  // Dohvati sve aute jednom - future
+  Future<List<CarModel>> getCarsForUser(String userId) async {
+    try {
+      final querySnapshot = await _db.collection('users')
+          .doc(userId)
+          .collection('cars')
+          .orderBy('year', descending: true)
+          .get();
+      return querySnapshot.docs
+          .map((doc) => CarModel.fromMap(doc.data(), doc.id))
+          .toList();
+    } catch (e) {
+      print("Greška pri dohvaćanju auta: $e");
+      return [];
+    }
+  }
+
+  // Dohvati auto jednom - future
+  Future<CarModel?> getCarById(String userId, String carId) async {
     try {
       final docSnapshot = await _db.collection('users')
           .doc(userId)
@@ -55,7 +72,7 @@ class CarService {
     }
   }
 
-
+  // Ažuriraj kilometražu auta pri servisu ili tocenju goriva
   Future<void> updateCarMileage(
     String userId,
     String carId,
@@ -69,6 +86,7 @@ class CarService {
     await ref.set({'mileage': newMileage}, SetOptions(merge: true));
   }
 
+  // CRUD operacije
   Future<DocumentReference<Map<String, dynamic>>> addCar(
     String userId,
     CarModel car,
@@ -94,118 +112,5 @@ class CarService {
         .collection('cars')
         .doc(carId)
         .delete();
-  }
-
-  // ============================
-  // TOČENJE GORIVA
-  // ============================
-  //
-  // Stream<List<RefuelModel>> getRefuels(String userId, String carId) {
-  //   return _db
-  //       .collection('users')
-  //       .doc(userId)
-  //       .collection('cars')
-  //       .doc(carId)
-  //       .collection('refuels')
-  //       .orderBy('date', descending: true)
-  //       .snapshots()
-  //       .map(
-  //         (snapshot) => snapshot.docs
-  //             .map((d) => RefuelModel.fromMap(d.data(), d.id))
-  //             .toList(),
-  //       );
-  // }
-  //
-  // Future<void> addRefuel(
-  //   String userId,
-  //   String carId,
-  //   RefuelModel refuel,
-  // ) async {
-  //   final ref = _db
-  //       .collection('users')
-  //       .doc(userId)
-  //       .collection('cars')
-  //       .doc(carId)
-  //       .collection('refuels')
-  //       .doc();
-  //   await ref.set(refuel.copyWith(id: ref.id).toMap());
-  // }
-  //
-  // Future<void> updateRefuel(
-  //   String userId,
-  //   String carId,
-  //   String refuelId,
-  //   RefuelModel refuel,
-  // ) async {
-  //   final ref = _db
-  //       .collection('users')
-  //       .doc(userId)
-  //       .collection('cars')
-  //       .doc(carId)
-  //       .collection('refuels')
-  //       .doc(refuelId);
-  //   await ref.set(refuel.toMap(), SetOptions(merge: true));
-  // }
-  //
-  // Future<void> deleteRefuel(
-  //   String userId,
-  //   String carId,
-  //   String refuelId,
-  // ) async {
-  //   final ref = _db
-  //       .collection('users')
-  //       .doc(userId)
-  //       .collection('cars')
-  //       .doc(carId)
-  //       .collection('refuels')
-  //       .doc(refuelId);
-  //   await ref.delete();
-  // }
-
-  // 🔹 Izračunaj troškove po vremenskom periodu
-  Future<Map<String, double>> getTotalExpenses({
-    required String userId,
-    required String carId,
-    required DateTime from,
-    required DateTime to,
-  }) async {
-    double totalService = 0;
-    double totalFuel = 0;
-
-    // Servisi
-    final serviceSnap = await _db
-        .collection('users')
-        .doc(userId)
-        .collection('cars')
-        .doc(carId)
-        .collection('services')
-        .where('date', isGreaterThanOrEqualTo: from)
-        .where('date', isLessThanOrEqualTo: to)
-        .get();
-
-    for (var doc in serviceSnap.docs) {
-      totalService += (doc['cost'] as num).toDouble();
-    }
-
-    // Gorivo
-    final refuelSnap = await _db
-        .collection('users')
-        .doc(userId)
-        .collection('cars')
-        .doc(carId)
-        .collection('refuels')
-        .where('date', isGreaterThanOrEqualTo: from)
-        .where('date', isLessThanOrEqualTo: to)
-        .get();
-
-    for (var doc in refuelSnap.docs) {
-      totalFuel += (doc['cost'] as num).toDouble();
-    }
-
-    return {
-      'services': totalService,
-      'fuel': totalFuel,
-      'total': totalService + totalFuel,
-    };
   }
 }

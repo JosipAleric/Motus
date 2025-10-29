@@ -93,14 +93,16 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
 
       // osvježi statistiku refuela
       ref.invalidate(refuelStatsProvider(widget.carId));
+      ref.invalidate(refuelsProvider(widget.carId));
 
       // dohvati trenutni auto
       final carService = ref.read(carServiceProvider);
-      final currentCar = await carService.getCarOnce(authUser.uid, widget.carId);
+      final currentCar = await carService.getCarById(authUser.uid, widget.carId);
 
       // ažuriraj kilometražu samo ako je nova veća
       if (currentCar != null && mileageAtRefuel > (currentCar.mileage ?? 0)) {
         await carService.updateCarMileage(authUser.uid, widget.carId, mileageAtRefuel.toInt());
+        ref.invalidate(carDetailsProvider(widget.carId));
       }
 
       if (mounted) {

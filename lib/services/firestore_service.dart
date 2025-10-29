@@ -4,19 +4,20 @@ import '../models/user_model.dart';
 class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
-  // 🔹 Spremi ili ažuriraj korisnika u Firestoreu
+  // Spremi ili ažuriraj korisnika u Firestoreu
   Future<void> saveUser(UserModel user) async {
     final ref = _db.collection('users').doc(user.uid);
     await ref.set(user.toMap(), SetOptions(merge: true));
   }
 
-  // 🔹 Dohvati korisnika po ID-u
+  // Dohvati korisnika po ID-u - future
   Future<UserModel?> getUserById(String uid) async {
     final doc = await _db.collection('users').doc(uid).get();
     if (!doc.exists) return null;
     return UserModel.fromMap(doc.data()!, doc.id);
   }
 
+  // Dohvati korisnika po ID-u - stream
   Stream<UserModel?> userDocumentStream(String uid) {
     return _db.collection('users').doc(uid).snapshots().map((doc) {
       if (!doc.exists) return null;

@@ -224,7 +224,7 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
 
   void _updateSelectedIndex() {
     final location =
-        GoRouter.of(context).routeInformationProvider.value.location ?? '/';
+        GoRouter.of(context).routeInformationProvider.value.uri.toString() ?? '/';
     final newIndex = getTabIndexFromLocation(location);
     if (_selectedIndex != newIndex) setState(() => _selectedIndex = newIndex);
   }
