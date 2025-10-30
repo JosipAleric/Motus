@@ -89,7 +89,7 @@ class CustomServiceCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _infoChip(icon: "solar:tag-price-bold", label: price),
+                  _infoChip(icon: "solar:tag-price-bold", label: price + " BAM"),
                 ],
               ),
             ],

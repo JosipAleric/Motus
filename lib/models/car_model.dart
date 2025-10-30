@@ -5,8 +5,8 @@ class CarModel {
   final int year;
   final String fuel_type;
   final String transmission;
-  final String displacement;
-  final double engine_capacity;
+  final double displacement;
+  final String drive_type;
   final int horsepower;
   final String license_plate;
   final int mileage;
@@ -21,7 +21,7 @@ class CarModel {
     required this.fuel_type,
     required this.transmission,
     required this.displacement,
-    required this.engine_capacity,
+    required this.drive_type,
     required this.horsepower,
     required this.license_plate,
     required this.mileage,
@@ -36,8 +36,8 @@ class CarModel {
     int? year,
     String? fuel_type,
     String? transmission,
-    String? displacement,
-    double? engine_capacity,
+    double? displacement, // Corrected type
+    String? drive_type,
     int? horsepower,
     String? license_plate,
     int? mileage,
@@ -51,8 +51,8 @@ class CarModel {
       year: year ?? this.year,
       fuel_type: fuel_type ?? this.fuel_type,
       transmission: transmission ?? this.transmission,
-      displacement: displacement ?? this.displacement,
-      engine_capacity: engine_capacity ?? this.engine_capacity,
+      displacement: displacement ?? this.displacement, // Fixed
+      drive_type: drive_type ?? this.drive_type,
       horsepower: horsepower ?? this.horsepower,
       license_plate: license_plate ?? this.license_plate,
       mileage: mileage ?? this.mileage,
@@ -70,7 +70,7 @@ class CarModel {
       'fuel_type': fuel_type,
       'transmission': transmission,
       'displacement': displacement,
-      'engine_capacity': engine_capacity,
+      'drive_type': drive_type,
       'horsepower': horsepower,
       'license_plate': license_plate,
       'mileage': mileage,
@@ -87,10 +87,10 @@ class CarModel {
       year: map['year'] is int ? map['year'] : int.tryParse(map['year'].toString()) ?? 0,
       fuel_type: map['fuel_type'] ?? '',
       transmission: map['transmission'] ?? '',
-      displacement: map['displacement'] ?? '',
-      engine_capacity: map['engine_capacity'] is double
-          ? map['engine_capacity']
-          : double.tryParse(map['engine_capacity'].toString()) ?? 0.0,
+      drive_type: map['drive_type'] ?? '',
+      displacement: map['displacement'] is double
+          ? map['displacement']
+          : double.tryParse(map['displacement'].toString()) ?? 0.0,
       horsepower: map['horsepower'] is int
           ? map['horsepower']
           : int.tryParse(map['horsepower'].toString()) ?? 0,
@@ -99,7 +99,7 @@ class CarModel {
           ? map['mileage']
           : int.tryParse(map['mileage'].toString()) ?? 0,
       VIN: map['VIN'] ?? '',
-      imageUrl: map['imageUrl' ],
+      imageUrl: map['imageUrl'],
     );
   }
 }

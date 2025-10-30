@@ -123,6 +123,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       backgroundColor: Colors.transparent,
       resizeToAvoidBottomInset: true,
       body: Container(
+        alignment: Alignment.center,
         color: AppColors.primary,
         child: LayoutBuilder(
             builder: (context, constraints) {
@@ -135,7 +136,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       children: [
                         // Gornji logo
                         Container(
-                          margin: const EdgeInsets.only(bottom: 50),
+                          margin: const EdgeInsets.only(bottom: 50, top: 50),
                           child: Column(
                             children: [
                               const SizedBox(height: 50),

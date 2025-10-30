@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:iconify_design/iconify_design.dart';
-import '../../providers/service_provider.dart';
+import '../../providers/service/service_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/customAlert.dart';
 import '../../widgets/customAppBar.dart';

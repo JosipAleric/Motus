@@ -1,83 +1,115 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/car_model.dart';
 import '../models/service_car_model.dart';
 import '../models/service_model.dart';
+import '../models/pagination_result.dart';
+import '../providers/user_provider.dart';
 
 class ServicesService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final Ref ref;
 
-  // Helper funkcija za dohvaćanje detalja o automobilu
-  Future<CarModel> _getCarDetails(String userId, String carId) async {
+  ServicesService(this.ref);
+
+  /// ✅ Pomoćna funkcija za dohvat trenutnog userId
+  String get _userId {
+    final authUser = ref.read(authStateChangesProvider).asData?.value;
+    if (authUser == null) {
+      throw Exception("Korisnik nije prijavljen.");
+    }
+    return authUser.uid;
+  }
+
+  /// ✅ Dohvati detalje o autu
+  Future<CarModel> _getCarDetails(String carId) async {
     final doc = await _db
         .collection('users')
-        .doc(userId)
+        .doc(_userId)
         .collection('cars')
         .doc(carId)
         .get();
-
     return CarModel.fromMap(doc.data()!, doc.id);
   }
 
-  // Glavna stream funkcija koja spaja servise i automobil
-  Stream<List<ServiceCar>> getServicesForCarStream(
-    String userId,
-    String carId,
-  ) {
-    final Future<CarModel> carDetailsFuture = _getCarDetails(userId, carId);
+  /// ✅ Paginated fetch servisa
+  Future<PaginationResult<ServiceCar>> getServicesForCarPage(
+      String carId, {
+        int pageSize = 10,
+        QueryDocumentSnapshot<Map<String, dynamic>>? startAfter,
+      }) async {
+    final car = await _getCarDetails(carId);
+
+    Query<Map<String, dynamic>> q = _db
+        .collection('users')
+        .doc(_userId)
+        .collection('cars')
+        .doc(carId)
+        .collection('services')
+        .orderBy('date', descending: true)
+        .limit(pageSize);
+
+    if (startAfter != null) q = q.startAfterDocument(startAfter);
+
+    final snapshot = await q.get();
+    final items = snapshot.docs
+        .map((d) => ServiceModel.fromMap(d.data(), d.id))
+        .map((service) => ServiceCar(service: service, car: car))
+        .toList();
+
+    return PaginationResult(
+      items: items,
+      lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
+      hasMore: snapshot.docs.length == pageSize,
+    );
+  }
+
+  /// ✅ Stream servisa za auto
+  Stream<List<ServiceCar>> getServicesForCarStream(String carId) {
+    final carFuture = _getCarDetails(carId);
 
     return _db
         .collection('users')
-        .doc(userId)
+        .doc(_userId)
         .collection('cars')
         .doc(carId)
         .collection('services')
         .orderBy('date', descending: true)
         .snapshots()
-        .map(
-          (snapshot) => snapshot.docs
-              .map((d) => ServiceModel.fromMap(d.data(), d.id))
-              .toList(),
-        )
-        .asyncMap((serviceList) async {
-          final CarModel car = await carDetailsFuture;
-
-          return serviceList.map((service) {
-            return ServiceCar(service: service, car: car);
-          }).toList();
-        });
+        .asyncMap((snapshot) async {
+      final car = await carFuture;
+      final services = snapshot.docs
+          .map((d) => ServiceModel.fromMap(d.data(), d.id))
+          .toList();
+      return services.map((s) => ServiceCar(service: s, car: car)).toList();
+    });
   }
 
-  // Future verzija dohvaćanja servisa s pripadajućim automobilom
-  Future<List<ServiceCar>> getServicesForCar(
-    String userId,
-    String carId,
-  ) async {
-    final car = await _getCarDetails(userId, carId);
+  /// ✅ Future verzija servisa
+  Future<List<ServiceCar>> getServicesForCar(String carId) async {
+    final car = await _getCarDetails(carId);
     final snapshot = await _db
         .collection('users')
-        .doc(userId)
+        .doc(_userId)
         .collection('cars')
         .doc(carId)
         .collection('services')
         .orderBy('date', descending: true)
         .get();
 
-    return snapshot.docs.map((d) {
-      final service = ServiceModel.fromMap(d.data(), d.id);
-      return ServiceCar(service: service, car: car);
-    }).toList();
+    return snapshot.docs
+        .map((d) => ServiceCar(
+      service: ServiceModel.fromMap(d.data(), d.id),
+      car: car,
+    ))
+        .toList();
   }
 
-  // Dohvati detalje servisa s pripadajućim automobilom
-  Future<ServiceCar?> getServiceWithCar(
-    String userId,
-    String carId,
-    String serviceId,
-  ) async {
+  /// ✅ Dohvati jedan servis s vozilom
+  Future<ServiceCar?> getServiceWithCar(String carId, String serviceId) async {
     final serviceDoc = await _db
         .collection('users')
-        .doc(userId)
+        .doc(_userId)
         .collection('cars')
         .doc(carId)
         .collection('services')
@@ -86,61 +118,49 @@ class ServicesService {
 
     if (!serviceDoc.exists) return null;
 
-    final serviceData = serviceDoc.data()!;
-    final car = await _getCarDetails(userId, carId);
-
+    final car = await _getCarDetails(carId);
     return ServiceCar(
-      service: ServiceModel.fromMap(serviceData, serviceDoc.id),
+      service: ServiceModel.fromMap(serviceDoc.data()!, serviceDoc.id),
       car: car,
     );
   }
 
-  // Dohvati posljednji servis s pripadajućim automobilom
-  Future<Map<String, dynamic>?> getLastServiceWithCar(String userId) async {
-    final carsSnap = await _db
+  /// ✅ Zadnji servis za auto
+  Future<Map<String, dynamic>?> getLastServiceForCar(String carId) async {
+    final carDoc = await _db
         .collection('users')
-        .doc(userId)
+        .doc(_userId)
         .collection('cars')
+        .doc(carId)
         .get();
 
-    Map<String, dynamic>? latestServiceData;
-    DateTime? latestDate;
+    if (!carDoc.exists) return null;
 
-    for (var carDoc in carsSnap.docs) {
-      final car = CarModel.fromMap(carDoc.data(), carDoc.id);
+    final car = CarModel.fromMap(carDoc.data()!, carDoc.id);
 
-      // Dohvati posljednji servis za auto
-      final serviceSnap = await _db
-          .collection('users')
-          .doc(userId)
-          .collection('cars')
-          .doc(car.id)
-          .collection('services')
-          .orderBy('date', descending: true)
-          .limit(1)
-          .get();
+    final serviceSnap = await _db
+        .collection('users')
+        .doc(_userId)
+        .collection('cars')
+        .doc(car.id)
+        .collection('services')
+        .orderBy('date', descending: true)
+        .limit(1)
+        .get();
 
-      if (serviceSnap.docs.isEmpty) continue;
+    if (serviceSnap.docs.isEmpty) return null;
 
-      final serviceDoc = serviceSnap.docs.first;
-      final service = ServiceModel.fromMap(serviceDoc.data(), serviceDoc.id);
+    final serviceDoc = serviceSnap.docs.first;
+    final service = ServiceModel.fromMap(serviceDoc.data(), serviceDoc.id);
 
-      if (latestDate == null || service.date.isAfter(latestDate)) {
-        latestDate = service.date;
-        latestServiceData = {'car': car, 'service': service};
-      }
-    }
-
-    return latestServiceData;
+    return {'car': car, 'service': service};
   }
 
-  // Dohvati posljednja dva servisa s pripadajućim automobilom
-  Future<List<Map<String, dynamic>>> getLatestServicesWithCar(
-    String userId,
-  ) async {
+  /// ✅ Zadnji servisi s automobilima
+  Future<List<Map<String, dynamic>>> getLatestServicesWithCar() async {
     final carsSnap = await _db
         .collection('users')
-        .doc(userId)
+        .doc(_userId)
         .collection('cars')
         .get();
 
@@ -148,17 +168,14 @@ class ServicesService {
 
     for (var carDoc in carsSnap.docs) {
       final car = CarModel.fromMap(carDoc.data(), carDoc.id);
-
       final serviceSnap = await _db
           .collection('users')
-          .doc(userId)
+          .doc(_userId)
           .collection('cars')
           .doc(car.id)
           .collection('services')
           .orderBy('date', descending: true)
           .get();
-
-      if (serviceSnap.docs.isEmpty) continue;
 
       for (var serviceDoc in serviceSnap.docs) {
         final service = ServiceModel.fromMap(serviceDoc.data(), serviceDoc.id);
@@ -166,24 +183,17 @@ class ServicesService {
       }
     }
 
-    allServices.sort((a, b) {
-      final DateTime dateA = a['service'].date;
-      final DateTime dateB = b['service'].date;
-      return dateB.compareTo(dateA);
-    });
+    allServices.sort((a, b) =>
+        (b['service'].date as DateTime).compareTo(a['service'].date as DateTime));
 
     return allServices.take(2).toList();
   }
 
-  // CRUD operacije za servise
-  Future<DocumentReference> addService(
-    String userId,
-    String carId,
-    ServiceModel service,
-  ) async {
+  /// ✅ CRUD
+  Future<DocumentReference> addService(String carId, ServiceModel service) async {
     final ref = _db
         .collection('users')
-        .doc(userId)
+        .doc(_userId)
         .collection('cars')
         .doc(carId)
         .collection('services')
@@ -194,14 +204,10 @@ class ServicesService {
   }
 
   Future<void> updateService(
-    String userId,
-    String carId,
-    String serviceId,
-    ServiceModel service,
-  ) async {
+      String carId, String serviceId, ServiceModel service) async {
     final ref = _db
         .collection('users')
-        .doc(userId)
+        .doc(_userId)
         .collection('cars')
         .doc(carId)
         .collection('services')
@@ -209,14 +215,10 @@ class ServicesService {
     await ref.set(service.toMap(), SetOptions(merge: true));
   }
 
-  Future<void> deleteService(
-    String userId,
-    String carId,
-    String serviceId,
-  ) async {
+  Future<void> deleteService(String carId, String serviceId) async {
     final ref = _db
         .collection('users')
-        .doc(userId)
+        .doc(_userId)
         .collection('cars')
         .doc(carId)
         .collection('services')

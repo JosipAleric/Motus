@@ -11,7 +11,7 @@ import 'package:intl/intl.dart';
 import '../../models/car_model.dart';
 import '../../models/user_model.dart';
 import '../../models/service_model.dart';
-import '../../providers/service_provider.dart';
+import '../../providers/service/service_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/car_provider.dart';
 
@@ -128,27 +128,23 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
         invoiceUrl: null,
       );
 
-      // Dodaj servis u Firestore da dobijemo ID (koristite carProvider za primjer)
-      final docRef = await servicesProvider.addService(currentUser.uid, _selectedCarId!, tempService);
+      final docRef = await servicesProvider.addService(_selectedCarId!, tempService);
 
       String? invoiceUrl;
       if (_pickedInvoice != null) {
-        // pass currentUser.uid instead of reading provider inside
         invoiceUrl = await _uploadInvoice(docRef.id, currentUser.uid);
       }
 
-      // Ažuriraj servis sa URL-om fakture ako postoji
       if (invoiceUrl != null) {
         final updatedService = tempService.copyWith(id: docRef.id, invoiceUrl: invoiceUrl);
-        await servicesProvider.updateService(currentUser.uid, _selectedCarId!, docRef.id, updatedService);
-
+        await servicesProvider.updateService( _selectedCarId!, docRef.id, updatedService);
       }
 
-      // Opcionalno: Ažuriranje kilometraže automobila
-      final currentCar = await carProvider.getCarById(currentUser.uid, _selectedCarId!);
+      final currentCar = await carProvider.getCarById(_selectedCarId!);
       if (currentCar != null && mileageValue > currentCar.mileage) {
-        await carProvider.updateCarMileage(currentUser.uid, _selectedCarId!, mileageValue);
+        await carProvider.updateCarMileage(_selectedCarId!, mileageValue);
         ref.invalidate(carDetailsProvider(_selectedCarId!));
+        ref.invalidate(carsProvider);
       }
 
       if (mounted) {
@@ -158,9 +154,9 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
           title: "Uspješno",
           message: "Servis je uspješno dodan.",
         );
-        ref.invalidate(servicesForCarProvider(_selectedCarId!));
-        ref.invalidate(lastestServicesWithCarProvider);
-        ref.invalidate(lastServiceWithCarProvider);
+        ref.invalidate(servicesPaginatorProvider(_selectedCarId!));
+        ref.invalidate(latestServicesWithCarProvider);
+        ref.invalidate(lastServiceForCarProvider(_selectedCarId!));
         GoRouter.of(context).pop();
       }
     } catch (e) {

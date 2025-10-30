@@ -5,6 +5,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:go_router/go_router.dart';
 import 'package:motus/screens/cars/add_car_screen.dart';
 import 'package:motus/screens/cars/car_details_screen.dart';
+import 'package:motus/screens/cars/edit_car_screen.dart';
 import 'package:motus/screens/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:motus/screens/refuels/add_refuel_screen.dart';
@@ -71,6 +72,14 @@ final _router = GoRouter(
               builder: (_, state) {
                 final carId = state.pathParameters['carId']!;
                 return CarDetailsScreen(carId: carId);
+              },
+            ),
+            GoRoute(
+              path: 'edit_car/:carId',
+              name: 'edit_car',
+              builder: (_, state) {
+                final carId = state.pathParameters['carId']!;
+                return EditCarScreen(carId: carId);
               },
             ),
             GoRoute(

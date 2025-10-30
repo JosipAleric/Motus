@@ -3,17 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:motus/widgets/customButton.dart';
 import 'package:motus/widgets/customRefuelCard.dart';
-import 'package:motus/widgets/customSnackbar.dart';
+import 'package:iconify_design/iconify_design.dart';
+
 import '../../models/car_model.dart';
 import '../../models/refuel_model.dart';
 import '../../providers/car_provider.dart';
-import '../../providers/refuel_provider.dart';
-import '../../providers/user_provider.dart';
+import '../../providers/refuel/refuel_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/customAlert.dart';
-import 'package:iconify_design/iconify_design.dart';
 
 import '../../widgets/customAppBar.dart';
+import '../../widgets/paginationWidget.dart';
 
 class RefuelsScreen extends ConsumerStatefulWidget {
   const RefuelsScreen({Key? key}) : super(key: key);
@@ -34,22 +34,33 @@ class _RefuelsScreenState extends ConsumerState<RefuelsScreen> {
       body: carsAsync.when(
         data: (cars) {
           if (cars.isEmpty) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
-              child: const CustomAlert(
+            return const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 15),
+              child: CustomAlert(
                 type: AlertType.info,
                 title: "Nema vozila",
-                message: "Dodajte vozilo da biste pratili točenja.",
+                message: "Dodajte vozilo da biste pratili povijest točenja goriva.",
               ),
             );
           }
 
           _selectedCarId ??= cars.first.id;
 
-          final selectedCar = cars.firstWhere((car) => car.id == _selectedCarId, orElse: () => cars.first);
+          final selectedCar = cars.firstWhere(
+                (car) => car.id == _selectedCarId,
+            orElse: () => cars.first,
+          );
 
           return SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
+            child: RefreshIndicator(
+              onRefresh: () async {
+                if (_selectedCarId != null) {
+                  final paginatorNotifier = ref.read(refuelsPaginatorProvider(_selectedCarId!).notifier);
+                  paginatorNotifier.reset();
+                  await paginatorNotifier.loadPage(0);
+                  ref.invalidate(refuelStatsProvider(_selectedCarId!));
+                }
+              },
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: Column(
@@ -82,189 +93,179 @@ class _RefuelsScreenState extends ConsumerState<RefuelsScreen> {
                             iconSize: 15,
                             borderRadius: 5,
                           ),
-                        )
+                        ),
                       ],
                     ),
                     const SizedBox(height: 10),
-                    Container(
-                      child: _selectedCarId == null
-                          ? const Center(child: Text('Odaberi vozilo'))
-                          : RefuelsContent(carId: _selectedCarId!, selectedCar: selectedCar),
+                    _selectedCarId == null
+                        ? const Center(child: Text('Odaberi vozilo'))
+                        : RefuelsContent(
+                      carId: _selectedCarId!,
+                      selectedCar: selectedCar,
                     ),
                   ],
                 ),
               ),
-            );
+            ),
+          );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Greška pri dohvaćanju auta: $e')),
       ),
     );
   }
-
 }
 
 class RefuelsContent extends ConsumerWidget {
   final String carId;
   final CarModel selectedCar;
 
-  const RefuelsContent({Key? key, required this.carId, required this.selectedCar}) : super(key: key);
+  const RefuelsContent({
+    Key? key,
+    required this.carId,
+    required this.selectedCar,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final statsAsync = ref.watch(refuelStatsProvider(carId));
-    final refuelsAsync = ref.watch(refuelsProvider(carId));
+    final paginatorState = ref.watch(refuelsPaginatorProvider(carId));
+    final paginatorNotifier = ref.read(refuelsPaginatorProvider(carId).notifier);
 
-    return RefreshIndicator(
-      onRefresh: () async {
-        ref.invalidate(refuelsProvider(carId));
-        ref.invalidate(refuelStatsProvider(carId));
-      },
-      child:  Column(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Image.asset(
+          'assets/images/car.png',
+          height: 140,
+          width: double.infinity,
+          fit: BoxFit.contain,
+        ),
+
+        statsAsync.when(
+          data: (stats) {
+            if (stats == null || stats.totalRefuels == 0) {
+              return const Text("");
+            }
+            return Column(
+              children: [
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: _infoChip(
+                        icon: 'ix:average',
+                        label: 'Potrošnja',
+                        text:
+                        '${stats.averageConsumption.toStringAsFixed(1)} L/100km',
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _infoChip(
+                        icon: 'hugeicons:chart-average',
+                        label: "Po točenju",
+                        text:
+                        '${stats.averageCostPerRefuel.toStringAsFixed(2)} BAM',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: _infoChip(
+                        icon: 'carbon:summary-kpi',
+                        label: 'Br. točenja',
+                        text: '${stats.totalRefuels} puta',
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _infoChip(
+                        icon: 'hugeicons:summation-02',
+                        label: "Trošak",
+                        text: '${stats.totalCost.toStringAsFixed(2)} BAM',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+              ],
+            );
+          },
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (e, _) => Center(child: Text('Greška: ${e.toString()}')),
+        ),
+
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Image.asset(
-              'assets/images/car.png',
-              height: 140,
-              width: double.infinity,
-              fit: BoxFit.contain,
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: const [
+                SizedBox(width: 1),
+                Padding(
+                  padding: EdgeInsets.only(top: 3),
+                  child: IconifyIcon(
+                    icon: 'icon-park-outline:right',
+                    color: AppColors.textPrimary,
+                    size: 20,
+                  ),
+                ),
+                SizedBox(width: 2),
+                Text(
+                  'Povijest točenja',
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Colors.black,
+                    fontFamily: "MPlus1",
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: 1.2,
+                    shadows: [
+                      Shadow(
+                        color: Colors.black54,
+                        offset: Offset(0, 0),
+                        blurRadius: 1,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
+            const SizedBox(height: 15),
 
-            statsAsync.when(
-              data: (stats) {
-                if (stats == null || stats.totalRefuels == 0) {
-                  return const Text("");
-                }
-
-                return Column(
-                  children: [
-                    const SizedBox(height: 20),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: _infoChip(
-                            icon: 'ix:average',
-                            label: 'Potrošnja',
-                            text: '${stats.averageConsumption.toStringAsFixed(1)} L/100km',
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _infoChip(
-                            icon: 'hugeicons:chart-average',
-                            label: "Po točenju",
-                            text: '${stats.averageCostPerRefuel.toStringAsFixed(2)} BAM',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: _infoChip(
-                            icon: 'carbon:summary-kpi',
-                            label: 'Br. točenja',
-                            text: '${stats.totalRefuels} puta',
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: _infoChip(
-                            icon: 'hugeicons:summation-02',
-                            label: "Trošak",
-                            text: '${stats.totalCost.toStringAsFixed(2)} BAM',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                  ],
+            PaginationWidget<RefuelModel>(
+              state: paginatorState,
+              notifier: paginatorNotifier,
+              emptyMessage: "Nema zabilježenih točenja goriva za ovo vozilo. Dodajte novi zapis kako biste pravili povijest točenja.",
+              outerScrollable: true,
+              itemBuilder: (context, refuel) {
+                return CustomRefuelCard(
+                    carModel: selectedCar.model,
+                    carBrand: selectedCar.brand,
+                    date: refuel.date,
+                    price: refuel.price,
+                    liters: refuel.liters,
+                    // TODO: Implementirati onDetailsTap logiku za prikaz detalja
+                    onDetailsTap: () {
+                      GoRouter.of(context).pushNamed(
+                        'refuel_details',
+                        pathParameters: {
+                          'carId': carId,
+                          'refuelId': refuel.id,
+                        },
+                      );
+                    },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Greška: ${e.toString()}')),
-            ),
-
-            refuelsAsync.when(
-              data: (refuels) {
-                if (refuels.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.all(0.0),
-                    child: CustomAlert(
-                      type: AlertType.info,
-                      title: "Info",
-                      message: "Nema zabilježenih točenja za ovo vozilo.",
-                    ),
-                  );
-                }
-
-                return Column(
-                  children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        const SizedBox(width: 1),
-                        const Padding(
-                          padding: EdgeInsets.only(top: 3),
-                          child: IconifyIcon(
-                            icon: 'icon-park-outline:right',
-                            color: AppColors.textPrimary,
-                            size: 20,
-                          ),
-                        ),
-                        const SizedBox(width: 2),
-                        const Text(
-                          'Povijest točenja',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.black,
-                            fontFamily: "MPlus1",
-                            fontWeight: FontWeight.w400,
-                            letterSpacing: 1.2,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black54,
-                                offset: Offset(0, 0),
-                                blurRadius: 1,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 15),
-                    ListView.builder(
-                      itemCount: refuels.length,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemBuilder: (context, index) {
-                        final refuel = refuels[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 20.0),
-                          child: CustomRefuelCard(
-                            carModel: selectedCar.model,
-                            carBrand: selectedCar.brand,
-                            date: refuel.date,
-                            price: refuel.price,
-                            liters: refuel.liters,
-                            // TODO: Implementirati onDetailsTap logiku za prikaz detalja
-                            onDetailsTap: (){},
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                );
-              },
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Greška pri učitavanju točenja: $e')),
             ),
           ],
         ),
+      ],
     );
   }
 }
@@ -289,6 +290,7 @@ class _CarDropdown extends StatelessWidget {
         child: DropdownButtonHideUnderline(
           child: DropdownButton<String>(
             value: selectedCarId,
+            menuMaxHeight: 400,
             icon: Container(
               alignment: Alignment.center,
               padding: const EdgeInsets.only(left: 5, top: 2),

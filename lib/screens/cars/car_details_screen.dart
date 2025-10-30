@@ -6,7 +6,7 @@ import 'package:motus/widgets/customAppBar.dart';
 import '../../providers/car_provider.dart';
 import 'package:iconify_design/iconify_design.dart';
 
-import '../../providers/service_provider.dart';
+import '../../providers/service/service_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/customButton.dart';
 import '../../widgets/customServiceCard.dart';
@@ -20,7 +20,7 @@ class CarDetailsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final carAsync = ref.watch(carDetailsProvider(carId));
-    final latestServiceWithCarAsync = ref.watch(lastServiceWithCarProvider);
+    final latestServiceForCarAsync = ref.watch(lastServiceForCarProvider(carId));
 
     String formattedMileage (int mileage) {
       switch(mileage.toString().length) {
@@ -177,9 +177,9 @@ class CarDetailsScreen extends ConsumerWidget {
 
                       const SizedBox(height: 15),
 
-                      latestServiceWithCarAsync.when(
-                        data: (serviceWithCar) {
-                          if (serviceWithCar == null) {
+                      latestServiceForCarAsync.when(
+                        data: (serviceForCar) {
+                          if (serviceForCar == null) {
                             return const Padding(
                               padding: EdgeInsets.symmetric(vertical: 5),
                               child: CustomAlert(
@@ -191,15 +191,15 @@ class CarDetailsScreen extends ConsumerWidget {
                             );
                           }
 
-                          final service = serviceWithCar['service'];
-                          final car = serviceWithCar['car'];
+                          final service = serviceForCar['service'];
+                          final car = serviceForCar['car'];
 
                           return CustomServiceCard(
                             carModel: car.model,
                             carBrand: car.brand,
                             date: service.date,
                             description: service.type,
-                            price: "${service.price.toStringAsFixed(0)} BAM",
+                            price: "${service.price.toStringAsFixed(0)}",
                             onDetailsTap: () {
                               GoRouter.of(context).pushNamed(
                                 'service_details',
@@ -243,7 +243,14 @@ class CarDetailsScreen extends ConsumerWidget {
                             height: 32,
                             child: CustomButton(
                               text: "Uredi",
-                              onPressed: () {},
+                              onPressed: () {
+                                GoRouter.of(context).pushNamed(
+                                  'edit_car',
+                                  pathParameters: {
+                                    'carId': car.id,
+                                  },
+                                );
+                              },
                               icon: "akar-icons:edit",
                               fontSize: 11,
                               iconSize: 17,
@@ -262,7 +269,7 @@ class CarDetailsScreen extends ConsumerWidget {
                       buildDetailsRow('Marka', car.brand, 'Model', car.model),
                       buildDetailsRow('Godina proizvodnje', car.year.toString(), 'Mjenjač', car.transmission),
                       buildDetailsRow('Kilometraža', '${car.mileage} km', 'Vrsta goriva', car.fuel_type),
-                      buildDetailsRow('Snaga motora', '${car.horsepower} KS', 'Zapremina motora', '${car.engine_capacity} cc'),
+                      buildDetailsRow('Snaga motora', '${car.horsepower} KS', 'Zapremina motora', '${car.displacement / 100} L'),
                       buildDetailsRow('VIN', '${car.VIN}', 'Registracijska oznaka', car.license_plate),
                       buildDetailsRow('Pogon', '${car.displacement}', 'Kilovati', car.horsepower != null ? (car.horsepower! * 0.745).toStringAsFixed(0) + " kW" : 'N/A'),
                     ],

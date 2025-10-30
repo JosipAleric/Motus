@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:motus/widgets/customButton.dart';
-import '../providers/service_provider.dart';
+import '../providers/service/service_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/car_provider.dart';
 import '../theme/app_theme.dart';
@@ -46,7 +46,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
 
     final user = ref.watch(currentUserStreamProvider);
     final carsAsync = ref.watch(carsProvider);
-    final latestServices = ref.watch(lastestServicesWithCarProvider);
+    final latestServices = ref.watch(latestServicesWithCarProvider);
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -88,7 +88,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             children: List.generate(cars.length, (index) {
                               final car = cars[index];
                               return Padding(
-                                padding: const EdgeInsets.only(bottom: 12.0),
+                                padding: const EdgeInsets.only(bottom: 15.0),
                                 child: CarCard(
                                   brand: car.brand,
                                   model: car.model,
@@ -105,7 +105,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               );
                             }),
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 15),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.center,

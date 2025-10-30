@@ -5,7 +5,7 @@ import 'package:iconify_design/iconify_design.dart';
 import 'package:motus/widgets/customAppBar.dart';
 import '../../models/refuel_model.dart';
 import '../../providers/car_provider.dart';
-import '../../providers/refuel_provider.dart';
+import '../../providers/refuel/refuel_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../widgets/customAlert.dart';
 import '../../widgets/customButton.dart';
@@ -87,21 +87,17 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
         carId: widget.carId,
       );
 
-      // dodaj refuel zapis
       final refuelService = ref.read(refuelServiceProvider);
-      await refuelService.addRefuel(authUser.uid, widget.carId, newRefuel);
+      await refuelService.addRefuel(widget.carId, newRefuel);
 
-      // osvježi statistiku refuela
       ref.invalidate(refuelStatsProvider(widget.carId));
-      ref.invalidate(refuelsProvider(widget.carId));
+      ref.invalidate(refuelsPaginatorProvider(widget.carId));
 
-      // dohvati trenutni auto
       final carService = ref.read(carServiceProvider);
-      final currentCar = await carService.getCarById(authUser.uid, widget.carId);
+      final currentCar = await carService.getCarById(widget.carId);
 
-      // ažuriraj kilometražu samo ako je nova veća
       if (currentCar != null && mileageAtRefuel > (currentCar.mileage ?? 0)) {
-        await carService.updateCarMileage(authUser.uid, widget.carId, mileageAtRefuel.toInt());
+        await carService.updateCarMileage(widget.carId, mileageAtRefuel.toInt());
         ref.invalidate(carDetailsProvider(widget.carId));
         ref.invalidate(carsProvider);
       }
