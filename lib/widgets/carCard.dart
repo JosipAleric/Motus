@@ -24,6 +24,20 @@ class CarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+
+    String formattedMileage (int mileage) {
+      switch(mileage.toString().length) {
+        case 4:
+          return mileage.toString().substring(0, 1) + ' ' + mileage.toString().substring(1) + ' km';
+        case 5:
+          return mileage.toString().substring(0, 2) + ' ' + mileage.toString().substring(2) + ' km';
+        case 6:
+          return mileage.toString().substring(0, 3) + ' ' + mileage.toString().substring(3) + ' km';
+        default:
+          return mileage.toString() + ' km';
+      }
+    }
+
     return Stack(
       children: [
         Container(
@@ -100,7 +114,7 @@ class CarCard extends StatelessWidget {
                 children: [
                   _infoChip(
                     icon: 'lets-icons:road-fill',
-                    label: mileage.toString().substring(0, 3) + ' ' + mileage.toString().substring(3) + ' km',
+                    label: formattedMileage(mileage),
                   ),
                   const SizedBox(width: 8),
                   _infoChip(

@@ -94,7 +94,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                   model: car.model,
                                   imageUrl: "/assets/images/car.png",
                                   year: car.year,
-                                  mileage: 182460,
+                                  mileage: car.mileage,
                                   badgeText: "lorem",
                                   onDetailsTap: () {
                                     GoRouter.of(context).push(

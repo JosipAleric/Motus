@@ -34,10 +34,13 @@ class _RefuelsScreenState extends ConsumerState<RefuelsScreen> {
       body: carsAsync.when(
         data: (cars) {
           if (cars.isEmpty) {
-            return const CustomAlert(
-              type: AlertType.info,
-              title: "Nema vozila",
-              message: "Dodajte vozilo da biste pratili točenja.",
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 15),
+              child: const CustomAlert(
+                type: AlertType.info,
+                title: "Nema vozila",
+                message: "Dodajte vozilo da biste pratili točenja.",
+              ),
             );
           }
 

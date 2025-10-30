@@ -23,6 +23,19 @@ class ServiceDetailsScreen extends ConsumerWidget {
       serviceDetailsWithCarProvider((carId, serviceId)),
     );
 
+    String formattedMileage (int mileage) {
+      switch(mileage.toString().length) {
+        case 4:
+          return mileage.toString().substring(0, 1) + ' ' + mileage.toString().substring(1) + ' km';
+        case 5:
+          return mileage.toString().substring(0, 2) + ' ' + mileage.toString().substring(2) + ' km';
+        case 6:
+          return mileage.toString().substring(0, 3) + ' ' + mileage.toString().substring(3) + ' km';
+        default:
+          return mileage.toString() + ' km';
+      }
+    }
+
     return Scaffold(
       appBar: CustomAppBar(
         title: serviceAsync.when(
@@ -165,8 +178,8 @@ class ServiceDetailsScreen extends ConsumerWidget {
                 ),
                 buildServiceDetailColumn(
                   context,
-                  "Kilometraža",
-                  car.mileage.toString(),
+                  "Kilometraža pri servisu",
+                  formattedMileage(service.mileage_at_service),
                   'stash:data-numbers',
                   suffixText: "KM",
                 ),

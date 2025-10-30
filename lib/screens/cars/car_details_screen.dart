@@ -22,6 +22,19 @@ class CarDetailsScreen extends ConsumerWidget {
     final carAsync = ref.watch(carDetailsProvider(carId));
     final latestServiceWithCarAsync = ref.watch(lastServiceWithCarProvider);
 
+    String formattedMileage (int mileage) {
+      switch(mileage.toString().length) {
+        case 4:
+          return mileage.toString().substring(0, 1) + ' ' + mileage.toString().substring(1) + ' km';
+        case 5:
+          return mileage.toString().substring(0, 2) + ' ' + mileage.toString().substring(2) + ' km';
+        case 6:
+          return mileage.toString().substring(0, 3) + ' ' + mileage.toString().substring(3) + ' km';
+        default:
+          return mileage.toString() + ' km';
+      }
+    }
+
     return Scaffold(
       appBar: CustomAppBar(
         title: carAsync.when(
@@ -80,7 +93,7 @@ class CarDetailsScreen extends ConsumerWidget {
                             child: _infoChip(
                               icon: 'lets-icons:road-fill',
                               label: 'Kilometraža',
-                              text: '${car.mileage.toString().substring(0, car.mileage.toString().length - 3)} ${car.mileage.toString().substring(car.mileage.toString().length - 3)} km',
+                              text: formattedMileage(car.mileage)
                             ),
                           ),
                           const SizedBox(width: 13),

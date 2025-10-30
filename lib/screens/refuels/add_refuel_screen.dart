@@ -103,6 +103,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
       if (currentCar != null && mileageAtRefuel > (currentCar.mileage ?? 0)) {
         await carService.updateCarMileage(authUser.uid, widget.carId, mileageAtRefuel.toInt());
         ref.invalidate(carDetailsProvider(widget.carId));
+        ref.invalidate(carsProvider);
       }
 
       if (mounted) {

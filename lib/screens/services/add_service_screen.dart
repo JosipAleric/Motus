@@ -159,6 +159,7 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
           message: "Servis je uspješno dodan.",
         );
         ref.invalidate(servicesForCarProvider(_selectedCarId!));
+        ref.invalidate(lastestServicesWithCarProvider);
         ref.invalidate(lastServiceWithCarProvider);
         GoRouter.of(context).pop();
       }

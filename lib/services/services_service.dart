@@ -7,6 +7,18 @@ import '../models/service_model.dart';
 class ServicesService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
+  // Helper funkcija za dohvaćanje detalja o automobilu
+  Future<CarModel> _getCarDetails(String userId, String carId) async {
+    final doc = await _db
+        .collection('users')
+        .doc(userId)
+        .collection('cars')
+        .doc(carId)
+        .get();
+
+    return CarModel.fromMap(doc.data()!, doc.id);
+  }
+
   // Glavna stream funkcija koja spaja servise i automobil
   Stream<List<ServiceCar>> getServicesForCarStream(
     String userId,
@@ -55,34 +67,6 @@ class ServicesService {
       final service = ServiceModel.fromMap(d.data(), d.id);
       return ServiceCar(service: service, car: car);
     }).toList();
-  }
-
-  // Stream<List<ServiceModel>> getServicesForCar(String userId, String carId) {
-  //   return _db
-  //       .collection('users')
-  //       .doc(userId)
-  //       .collection('cars')
-  //       .doc(carId)
-  //       .collection('services')
-  //       .orderBy('date', descending: true)
-  //       .snapshots()
-  //       .map(
-  //         (snapshot) => snapshot.docs
-  //         .map((d) => ServiceModel.fromMap(d.data(), d.id))
-  //         .toList(),
-  //   );
-  // }
-
-  // Helper funkcija za dohvaćanje detalja o automobilu
-  Future<CarModel> _getCarDetails(String userId, String carId) async {
-    final doc = await _db
-        .collection('users')
-        .doc(userId)
-        .collection('cars')
-        .doc(carId)
-        .get();
-
-    return CarModel.fromMap(doc.data()!, doc.id);
   }
 
   // Dohvati detalje servisa s pripadajućim automobilom
