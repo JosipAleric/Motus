@@ -20,7 +20,7 @@ RefuelService? _getServiceInstance(Ref ref) {
   return ref.watch(refuelServiceProvider);
 }
 
-// Popis svih refuela za određenog korisnika i auto s paginacijom
+// All refuels with pagination
 final refuelsPaginatorProvider = StateNotifierProvider.autoDispose
     .family<RefuelsPaginator, PaginationState<RefuelModel>, String>((ref, carId) {
   final userId = ref.watch(_currentUserIdProvider);
@@ -34,7 +34,7 @@ final refuelsPaginatorProvider = StateNotifierProvider.autoDispose
 });
 
 // ----------------------------------------------------------------------
-// 5. Future provideri
+// Future providers
 // ----------------------------------------------------------------------
 
 final refuelsProvider =
@@ -52,7 +52,7 @@ FutureProvider.autoDispose.family<RefuelStatistics?, String>((ref, carId) async 
 });
 
 // ----------------------------------------------------------------------
-// 6. Stream provideri
+// Stream providers
 // ----------------------------------------------------------------------
 
 final refuelsStreamProvider =

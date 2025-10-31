@@ -9,10 +9,6 @@ class RefuelService {
 
   RefuelService(this._userId);
 
-  // ----------------------------------------------------------------------
-  // 🔹 Privatni helper
-  // ----------------------------------------------------------------------
-
   CollectionReference<Map<String, dynamic>> _refuelsRef(String carId) {
     return _db
         .collection('users')
@@ -21,10 +17,6 @@ class RefuelService {
         .doc(carId)
         .collection('refuels');
   }
-
-  // ----------------------------------------------------------------------
-  // 🔹 Paginated fetch
-  // ----------------------------------------------------------------------
 
   Future<PaginationResult<RefuelModel>> getRefuelsPage(
       String carId, {
@@ -47,19 +39,12 @@ class RefuelService {
     );
   }
 
-  // ----------------------------------------------------------------------
-  // 🔹 Svi refueli
-  // ----------------------------------------------------------------------
-
   Future<List<RefuelModel>> getRefuels(String carId) async {
     final snapshot =
     await _refuelsRef(carId).orderBy('date', descending: true).get();
     return snapshot.docs.map((d) => RefuelModel.fromMap(d)).toList();
   }
 
-  // ----------------------------------------------------------------------
-  // 🔹 Statistika
-  // ----------------------------------------------------------------------
 
   Future<RefuelStatistics?> getRefuelStatistics(String carId) async {
     final snapshot = await _refuelsRef(carId)
@@ -103,7 +88,7 @@ class RefuelService {
   }
 
   // ----------------------------------------------------------------------
-  // 🔹 Streamovi
+  // Streams
   // ----------------------------------------------------------------------
 
   Stream<List<RefuelModel>> getRefuelsStream(String carId) {
@@ -156,7 +141,7 @@ class RefuelService {
   }
 
   // ----------------------------------------------------------------------
-  // 🔹 CRUD
+  // CRUD
   // ----------------------------------------------------------------------
 
   Future<void> addRefuel(String carId, RefuelModel refuel) async {

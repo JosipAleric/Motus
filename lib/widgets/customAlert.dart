@@ -55,7 +55,6 @@ class CustomAlert extends StatelessWidget {
     }
   }
 
-  // Funkcija za ikonu u krugu sa obojenom ivicom
   Widget _buildIcon(BuildContext context) {
     final iconColor = _getIconColor(context);
 
@@ -82,7 +81,6 @@ class CustomAlert extends StatelessWidget {
     );
   }
 
-  // Funkcija koja vraća vertikalnu liniju na lijevoj strani
   Widget _buildLeftBorder(BuildContext context) {
     final iconColor = _getIconColor(context);
     return Container(

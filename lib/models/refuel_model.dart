@@ -3,14 +3,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class RefuelModel {
   final String id;
   final DateTime date;
-  final num mileageAtRefuel;       // kilometraža prilikom točenja
-  final double liters;         // količina točenog goriva u litrama
-  final double pricePerLiter;  // cijena po litri
-  final double price;      // ukupan trošak (liters * pricePerLiter)
+  final num mileageAtRefuel;
+  final double liters;
+  final double pricePerLiter;
+  final double price;
   final bool usedFuelAditives;
-  final String? gasStation;    // opcionalno: ime benzinske
-  final String? notes;         // dodatne napomene
-  final String carId;          // referenca na auto
+  final String? gasStation;
+  final String? notes;
+  final String carId;
 
   RefuelModel({
     required this.id,
@@ -25,7 +25,7 @@ class RefuelModel {
     this.notes,
   });
 
-  // 🔹 Pretvaranje Firestore dokumenta u objekt
+  // Convert Firestore DocumentSnapshot to RefuelModel
   factory RefuelModel.fromMap(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     return RefuelModel(
@@ -42,7 +42,6 @@ class RefuelModel {
     );
   }
 
-  // 🔹 Pretvaranje objekta u Map za Firestore
   Map<String, dynamic> toMap() {
     return {
       'date': Timestamp.fromDate(date),
@@ -57,7 +56,6 @@ class RefuelModel {
     };
   }
 
-  // 🔹 Kopija s izmjenama (korisno za update)
   RefuelModel copyWith({
     String? id,
     DateTime? date,

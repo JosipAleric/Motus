@@ -49,7 +49,6 @@ class ServiceModel {
   }
 
   factory ServiceModel.fromMap(Map<String, dynamic> map, String id) {
-    // Robust date parsing: support Timestamp, ISO strings, and milliseconds.
     final rawDate = map['date'];
     DateTime parsedDate;
     if (rawDate is Timestamp) {
@@ -62,10 +61,8 @@ class ServiceModel {
       parsedDate = DateTime.now();
     }
 
-    // support both 'carId' and 'car_id' naming
     final carId = map['carId'] ?? map['car_id'] ?? '';
 
-    // support 'price' or legacy 'cost' field
     double price;
     if (map.containsKey('price')) {
       price = (map['price'] is num) ? (map['price'] as num).toDouble() : 0.0;

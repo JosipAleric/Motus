@@ -37,6 +37,7 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
   String? _selectedFuelType;
   String? _selectedTransmission;
   String? _selectedDriveType;
+  String? _selectedVehicleType;
   XFile? _pickedImage;
 
   bool _isLoading = false;
@@ -44,15 +45,14 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
   final List<String> _fuelTypes = ['Benzin', 'Dizel', 'Električni', 'Hibrid'];
   final List<String> _transmissions = ['Automatski', 'Manualni'];
   final List<String> _driveTypes = ['Prednji pogon', 'Zadnji pogon', '4x4'];
+  final List<String> _vehicle_types = ['Karavan', 'Sedan', 'SUV', 'Hatchback', 'Kabriolet', 'Pickup', 'Monovolumen', 'Coupe', 'VAN', 'Ostalo'];
 
-  /// 📸 Odabir slike
   Future<void> _pickImage() async {
     final picker = ImagePicker();
     final image = await picker.pickImage(source: ImageSource.gallery);
     if (image != null) setState(() => _pickedImage = image);
   }
 
-  /// ☁️ Upload slike u Firebase Storage
   Future<String?> _uploadImage(String carId) async {
     if (_pickedImage == null) return null;
     try {
@@ -76,7 +76,6 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
     }
   }
 
-  /// 💾 Spremanje vozila
   Future<void> _saveCar() async {
     if (!_formKey.currentState!.validate()) return;
     if (_selectedFuelType == null || _selectedTransmission == null) {
@@ -102,17 +101,16 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
         fuel_type: _selectedFuelType!,
         transmission: _selectedTransmission!,
         drive_type: _selectedDriveType!,
+        vehicle_type: _selectedVehicleType!,
         displacement: double.tryParse(_displacementController.text.trim()) ?? 0.0,
         horsepower: int.tryParse(_horsepowerController.text.trim()) ?? 0,
         license_plate: _licensePlateController.text.trim(),
         mileage: int.tryParse(_mileageController.text.trim()) ?? 0,
-        VIN: _vinController.text.trim(),
+        vin: _vinController.text.trim(),
       );
 
-      // 🔹 Dodaj auto u Firestore (CarService sam dodaje pod trenutnog usera)
       final docRef = await carService.addCar(tempCar);
 
-      // 🔹 Ako je odabrana slika, pošalji i ažuriraj auto s image URL-om
       String? imageUrl;
       if (_pickedImage != null) {
         imageUrl = await _uploadImage(docRef.id);
@@ -258,6 +256,14 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
                 _transmissions,
                 _selectedTransmission,
                     (val) => setState(() => _selectedTransmission = val),
+              ),
+              const SizedBox(height: 8),
+              _buildDropdown(
+                'Vrsta vozila',
+                'fluent:transmission-20-regular',
+                _vehicle_types,
+                _selectedVehicleType,
+                    (val) => setState(() => _selectedVehicleType = val),
               ),
               const SizedBox(height: 15),
               _buildImagePicker(),

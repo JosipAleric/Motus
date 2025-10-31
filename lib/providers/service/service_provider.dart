@@ -25,7 +25,7 @@ ServicesService? _getServiceInstance(Ref ref) {
   return ref.watch(servicesServiceProvider);
 }
 
-// Paginacija servisa (npr. screen "Svi servisi")
+// Paginated services for a specific car
 final servicesPaginatorProvider =
 StateNotifierProvider.autoDispose.family<ServicesPaginator, PaginationState<ServiceCar>, String>((ref, carId) {
   final userId = ref.watch(_currentUserIdProvider);
@@ -40,7 +40,7 @@ StateNotifierProvider.autoDispose.family<ServicesPaginator, PaginationState<Serv
   return notifier;
 });
 
-// Zadnji servisi vezani uz usera (HOME PAGE)
+// Latest services with car details for current user
 final latestServicesWithCarProvider =
 FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   final service = _getServiceInstance(ref);
@@ -49,7 +49,7 @@ FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
   return service.getLatestServicesWithCar();
 });
 
-// Lista servisa po vozilu (Future)
+// Services list for a specific car (Future)
 final servicesForCarProvider =
 FutureProvider.autoDispose.family<List<ServiceCar>, String>((ref, carId) async {
   final service = _getServiceInstance(ref);
@@ -58,7 +58,7 @@ FutureProvider.autoDispose.family<List<ServiceCar>, String>((ref, carId) async {
   return service.getServicesForCar(carId);
 });
 
-// Lista servisa po vozilu (Stream)
+// Services list for a specific car (Stream)
 final servicesForCarStreamProvider =
 StreamProvider.autoDispose.family<List<ServiceCar>, String>((ref, carId) {
   final service = _getServiceInstance(ref);
@@ -67,7 +67,7 @@ StreamProvider.autoDispose.family<List<ServiceCar>, String>((ref, carId) {
   return service.getServicesForCarStream(carId);
 });
 
-// Zadnji servis za vozilo
+// Last service for a specific car
 final lastServiceForCarProvider =
 FutureProvider.autoDispose.family<Map<String, dynamic>?, String>((ref, carId) async {
   final service = _getServiceInstance(ref);
@@ -76,7 +76,7 @@ FutureProvider.autoDispose.family<Map<String, dynamic>?, String>((ref, carId) as
   return service.getLastServiceForCar(carId);
 });
 
-// Detalji pojedinačnog servisa
+// Detailed service with car info
 final serviceDetailsWithCarProvider =
 FutureProvider.autoDispose.family<ServiceCar?, (String, String)>((ref, ids) async {
   final (carId, serviceId) = ids;

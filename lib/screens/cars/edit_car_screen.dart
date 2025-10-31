@@ -39,6 +39,7 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
   String? _selectedFuelType;
   String? _selectedTransmission;
   String? _selectedDriveType;
+  String? _selectedVehicleType;
   XFile? _pickedImage;
 
   bool _isLoading = false;
@@ -47,6 +48,7 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
   final List<String> _fuelTypes = ['Benzin', 'Dizel', 'Električni', 'Hibrid'];
   final List<String> _transmissions = ['Automatski', 'Manualni'];
   final List<String> _driveTypes = ['Prednji pogon', 'Zadnji pogon', '4x4'];
+  final List<String> _vehicleTypes = ['Karavan', 'Sedan', 'SUV', 'Hatchback', 'Kabriolet', 'Pickup', 'Monovolumen', 'Coupe', 'VAN', 'Ostalo'];
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -107,8 +109,9 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
         horsepower: int.tryParse(_horsepowerController.text.trim()) ?? 0,
         license_plate: _licensePlateController.text.trim(),
         mileage: int.tryParse(_mileageController.text.trim()) ?? 0,
-        VIN: _vinController.text.trim(),
+        vin: _vinController.text.trim(),
         imageUrl: imageUrl,
+        vehicle_type: _selectedVehicleType!
       );
 
       await carProvider.updateCar(existingCar.id, updatedCar);
@@ -146,11 +149,12 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
     _horsepowerController.text = car.horsepower.toString();
     _licensePlateController.text = car.license_plate;
     _mileageController.text = car.mileage.toString();
-    _vinController.text = car.VIN;
+    _vinController.text = car.vin;
 
     _fuelTypes.contains(car.fuel_type) ? _selectedFuelType = car.fuel_type : _selectedFuelType = null;
     _transmissions.contains(car.transmission) ? _selectedTransmission = car.transmission : _selectedTransmission = null;
     _driveTypes.contains(car.drive_type) ? _selectedDriveType = car.drive_type : _selectedDriveType = null;
+    _vehicleTypes.contains(car.vehicle_type) ? _selectedVehicleType = car.vehicle_type : _selectedVehicleType = null;
 
     _initialized = true;
   }
@@ -275,6 +279,9 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
                       const SizedBox(height: 8),
                       _buildDropdown('Mjenjač', 'fluent:transmission-20-regular',
                           _transmissions, _selectedTransmission, (val) => setState(() => _selectedTransmission = val)),
+                      const SizedBox(height: 8),
+                      _buildDropdown('Vrsta vozila', 'fluent:transmission-20-regular',
+                          _vehicleTypes, _selectedVehicleType, (val) => setState(() => _selectedVehicleType = val)),
                       const SizedBox(height: 15),
                       _buildImagePicker(car.imageUrl),
                       const SizedBox(height: 20),

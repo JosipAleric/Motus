@@ -299,19 +299,40 @@ class CarDetailsScreen extends ConsumerWidget {
                       buildDetailsRow('Godina proizvodnje', car.year.toString(), 'Mjenjač', car.transmission),
                       buildDetailsRow('Kilometraža', formattedMileage(car.mileage), 'Vrsta goriva', car.fuel_type),
                       buildDetailsRow('Snaga motora', '${car.horsepower} KS', 'Zapremina motora', '${car.displacement / 1000} L'),
-                      buildDetailsRow('VIN', '${car.VIN}', 'Registracijska oznaka', car.license_plate),
+                      buildDetailsRow('VIN', '${car.vin}', 'Registracijska oznaka', car.license_plate),
                       buildDetailsRow('Pogon', '${car.drive_type}', 'Kilovati', car.horsepower != null ? (car.horsepower! * 0.745).toStringAsFixed(0) + " kW" : 'N/A'),
                       const SizedBox(height: 20),
 
                       SizedBox(
                         width: double.infinity,
-                        child: CustomButton(
-                          text: "Obriši vozilo",
+                        child: FilledButton.tonal(
+                          style: FilledButton.styleFrom(
+                            backgroundColor: Colors.red.withOpacity(0.1),
+                            padding: const EdgeInsets.symmetric(vertical: 15),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const IconifyIcon(icon: "fluent:delete-32-regular", size: 20, color: Colors.red),
+                              const SizedBox(width: 10),
+                              const Text(
+                                'Obriši vozilo',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.red,
+                                ),
+                              ),
+                            ],
+                          ),
                           onPressed: () {
                             showDialog(
                               context: context,
                               builder: (BuildContext context) {
                                 return AlertDialog(
+                                  backgroundColor: Colors.white,
                                   title: const Text('Potvrda brisanja'),
                                   content: const Text('Jeste li sigurni da želite obrisati ovo vozilo? Ova akcija se ne može poništiti.'),
                                   actions: <Widget>[
@@ -336,16 +357,6 @@ class CarDetailsScreen extends ConsumerWidget {
                               },
                             );
                           },
-                          icon: "solar:trash-bin-broken",
-                          fontSize: 14,
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 15,
-                            horizontal: 30,
-                          ),
-                          fontWeight: FontWeight.w700,
-                          borderRadius: 10.0,
-                          letterSpacing: 3,
-                          outlined: true,
                         ),
                       ),
                     ],

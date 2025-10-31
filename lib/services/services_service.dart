@@ -11,11 +11,7 @@ class ServicesService {
 
   ServicesService(this._userId);
 
-  // ----------------------------------------------------------------------
-  // PRIVATNI HELPERI
-  // ----------------------------------------------------------------------
-
-  // Dohvati referencu na kolekciju servisa za određeni auto
+  // Reference to services collection for a specific car
   CollectionReference<Map<String, dynamic>> _serviceCollection(String carId) {
     return _db
         .collection('users')
@@ -25,7 +21,7 @@ class ServicesService {
         .collection('services');
   }
 
-  // Dohvati detalje o autu
+  // Fetch car by ID
   Future<CarModel> _getCar(String carId) async {
     final doc = await _db
         .collection('users')
@@ -38,10 +34,7 @@ class ServicesService {
     return CarModel.fromMap(doc.data()!, doc.id);
   }
 
-  // ----------------------------------------------------------------------
-  // PAGINACIJA
-  // ----------------------------------------------------------------------
-
+  // Paination for services of a specific car
   Future<PaginationResult<ServiceCar>> getServicesForCarPage(
       String carId, {
         int pageSize = 4,
@@ -69,9 +62,6 @@ class ServicesService {
     );
   }
 
-  // ----------------------------------------------------------------------
-  // STREAM I LISTA SERVISA
-  // ----------------------------------------------------------------------
 
   Stream<List<ServiceCar>> getServicesForCarStream(String carId) {
     final carFuture = _getCar(carId);
@@ -100,10 +90,8 @@ class ServicesService {
     }).toList();
   }
 
-  // ----------------------------------------------------------------------
-  // DETALJI POJEDINAČNOG SERVISA
-  // ----------------------------------------------------------------------
 
+  // Service details
   Future<ServiceCar?> getServiceWithCar(String carId, String serviceId) async {
     final doc = await _serviceCollection(carId).doc(serviceId).get();
 
@@ -116,7 +104,7 @@ class ServicesService {
   }
 
   // ----------------------------------------------------------------------
-  // ZADNJI SERVISI
+  // Latest services
   // ----------------------------------------------------------------------
 
   Future<Map<String, dynamic>?> getLastServiceForCar(String carId) async {
@@ -173,7 +161,7 @@ class ServicesService {
   }
 
   // ----------------------------------------------------------------------
-  //  CRUD OPERACIJE
+  //  CRUD
   // ----------------------------------------------------------------------
 
   Future<DocumentReference<Map<String, dynamic>>> addService(String carId, ServiceModel service) async {

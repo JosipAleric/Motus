@@ -13,7 +13,7 @@ final authStateChangesProvider = StreamProvider<User?>((ref) {
   return authService.authStateChanges;
 });
 
-// FutureProvider za kompletan UserModel iz Firestore
+// FutureProvider for complete UserModel from Firestore
 final currentUserFutureProvider = FutureProvider<UserModel?>((ref) async {
   final authUser = ref.watch(authStateChangesProvider).asData?.value;
   if (authUser == null) return null;
@@ -22,7 +22,7 @@ final currentUserFutureProvider = FutureProvider<UserModel?>((ref) async {
   return await userService.getUserById(authUser.uid);
 });
 
-// StreamProvider za kompletan UserModel iz Firestore
+// StreamProvider for real-time UserModel updates from Firestore
 final currentUserStreamProvider = StreamProvider<UserModel?>((ref) {
   final authUser = ref.watch(authStateChangesProvider).asData?.value;
   if (authUser == null) return const Stream.empty();
