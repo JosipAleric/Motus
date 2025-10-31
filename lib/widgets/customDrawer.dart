@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:iconify_design/iconify_design.dart';
 import '../theme/app_theme.dart';
+import '../services/auth_service.dart';
 
 const double _kIconSize = 17.0;
 
@@ -28,7 +29,7 @@ class _DrawerItem extends StatelessWidget {
   }
 
   Future<void> _signOut(BuildContext context) async {
-    await FirebaseAuth.instance.signOut();
+    await AuthService().logout();
     GoRouter.of(context).pop();
     GoRouter.of(context).go('/login');
   }

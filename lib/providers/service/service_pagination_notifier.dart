@@ -9,7 +9,7 @@ class ServicesPaginator extends PaginationNotifier<ServiceCar> {
   final Ref ref;
   final String carId;
 
-  ServicesPaginator(this.ref, this.carId, {int pageSize = 5})
+  ServicesPaginator(this.ref, this.carId, {int pageSize = 4})
       : super(pageSize: pageSize);
 
   @override
@@ -18,9 +18,13 @@ class ServicesPaginator extends PaginationNotifier<ServiceCar> {
     required int pageIndex,
     QueryDocumentSnapshot<Map<String, dynamic>>? startAfter,
   }) async {
-    try {
-      final servicesService = ref.read(serviceProvider);
+    final servicesService = ref.read(servicesServiceProvider);
 
+    if (servicesService == null) {
+      return (<ServiceCar>[], null, false);
+    }
+
+    try {
       final PaginationResult<ServiceCar> result =
       await servicesService.getServicesForCarPage(
         carId,
@@ -30,7 +34,6 @@ class ServicesPaginator extends PaginationNotifier<ServiceCar> {
 
       return (result.items, result.lastDocument, result.hasMore);
     } catch (e) {
-      // Ako nešto pođe po zlu, vrati prazan rezultat
       print("Greška pri paginaciji servisa: $e");
       return (<ServiceCar>[], null, false);
     }

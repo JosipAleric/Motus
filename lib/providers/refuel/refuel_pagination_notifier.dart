@@ -1,16 +1,16 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:motus/providers/refuel/refuel_provider.dart';
 import '../../../models/refuel_model.dart';
 import '../../../models/pagination_result.dart';
-import '../user_provider.dart';
 import '../../../core/pagination/pagination_notifier.dart';
+import 'refuel_provider.dart';
 
 class RefuelsPaginator extends PaginationNotifier<RefuelModel> {
   final Ref ref;
   final String carId;
 
-  RefuelsPaginator(this.ref, this.carId) : super(pageSize: 3);
+  RefuelsPaginator(this.ref, this.carId, {int pageSize = 2})
+      : super(pageSize: pageSize);
 
   @override
   Future<(List<RefuelModel>, QueryDocumentSnapshot<Map<String, dynamic>>?, bool)>
@@ -18,18 +18,24 @@ class RefuelsPaginator extends PaginationNotifier<RefuelModel> {
     required int pageIndex,
     QueryDocumentSnapshot<Map<String, dynamic>>? startAfter,
   }) async {
+    final refuelService = ref.read(refuelServiceProvider);
 
-    final authUser = ref.read(authStateChangesProvider).asData?.value;
-    if (authUser == null) return (<RefuelModel>[], null, false);
+    if (refuelService == null) {
+      return (<RefuelModel>[], null, false);
+    }
 
-    final refuels = ref.read(refuelServiceProvider);
+    try {
+      final PaginationResult<RefuelModel> result =
+      await refuelService.getRefuelsPage(
+        carId,
+        pageSize: pageSize,
+        startAfter: startAfter,
+      );
 
-    final PaginationResult<RefuelModel> result = await refuels.getRefuelsPage(
-      carId,
-      pageSize: pageSize,
-      startAfter: startAfter,
-    );
-
-    return (result.items, result.lastDocument, result.hasMore);
+      return (result.items, result.lastDocument, result.hasMore);
+    } catch (e) {
+      print("Greška pri paginaciji refuela: $e");
+      return (<RefuelModel>[], null, false);
+    }
   }
 }

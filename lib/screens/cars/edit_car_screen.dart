@@ -89,7 +89,7 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final carProvider = ref.read(carServiceProvider);
+      final carProvider = ref.read(carServiceProvider)!;
 
       String? imageUrl = existingCar.imageUrl;
       if (_pickedImage != null) {
@@ -121,6 +121,7 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
           message: "Vozilo je uspješno ažurirano.",
         );
         ref.invalidate(carsProvider);
+        ref.invalidate(carDetailsProvider(existingCar.id));
         GoRouter.of(context).pop();
       }
     } catch (e) {
@@ -147,9 +148,9 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
     _mileageController.text = car.mileage.toString();
     _vinController.text = car.VIN;
 
-    _selectedFuelType = car.fuel_type;
-    _selectedTransmission = car.transmission;
-    _selectedDriveType = car.drive_type;
+    _fuelTypes.contains(car.fuel_type) ? _selectedFuelType = car.fuel_type : _selectedFuelType = null;
+    _transmissions.contains(car.transmission) ? _selectedTransmission = car.transmission : _selectedTransmission = null;
+    _driveTypes.contains(car.drive_type) ? _selectedDriveType = car.drive_type : _selectedDriveType = null;
 
     _initialized = true;
   }

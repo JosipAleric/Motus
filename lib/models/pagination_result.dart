@@ -1,4 +1,3 @@
-// ...existing code...
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PaginationResult<T> {
@@ -8,4 +7,3 @@ class PaginationResult<T> {
 
   PaginationResult({required this.items, this.lastDocument, required this.hasMore});
 }
-

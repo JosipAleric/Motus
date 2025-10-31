@@ -3,41 +3,46 @@ import '../models/car_model.dart';
 import '../services/car_service.dart';
 import 'user_provider.dart';
 
-// CarService sam zna koji je trenutni korisnik (uzima iz FirebaseAuth).
-final carServiceProvider = Provider<CarService>((ref) => CarService());
+final _currentUserIdProvider = Provider<String?>((ref) {
+  return ref.watch(authStateChangesProvider).asData?.value?.uid;
+});
 
-// FutureProvider – dohvaća sve aute trenutnog korisnika (jednokratno)
-final carsProvider = FutureProvider<List<CarModel>>((ref) async {
-  final authUser = ref.watch(authStateChangesProvider).asData?.value;
-  if (authUser == null) return [];
+// Automatski injektira userId u servis
+final carServiceProvider = Provider<CarService?>((ref) {
+  final userId = ref.watch(_currentUserIdProvider);
 
-  final carService = ref.read(carServiceProvider);
+  if (userId == null) {
+    return null;
+  }
+  return CarService(userId);
+});
+
+// FutureProvider – dohvaća sve aute trenutnog korisnika
+final carsProvider = FutureProvider.autoDispose<List<CarModel>>((ref) async {
+  final carService = ref.watch(carServiceProvider);
+  if (carService == null) return [];
   return await carService.getCarsForUser();
 });
 
-// FutureProvider.family – dohvaća jedan auto po ID-u (jednokratno)
-final carDetailsProvider = FutureProvider.family<CarModel?, String>((ref, carId) async {
-  final authUser = ref.watch(authStateChangesProvider).asData?.value;
-  if (authUser == null) return null;
-
-  final carService = ref.read(carServiceProvider);
+// FutureProvider.family – dohvaća jedan auto po ID-u
+final carDetailsProvider =
+FutureProvider.autoDispose.family<CarModel?, String>((ref, carId) async {
+  final carService = ref.watch(carServiceProvider);
+  if (carService == null) return null;
   return await carService.getCarById(carId);
 });
 
 // StreamProvider – real-time stream svih auta korisnika
 final carsStreamProvider = StreamProvider<List<CarModel>>((ref) {
-  final authUser = ref.watch(authStateChangesProvider).asData?.value;
-  if (authUser == null) return const Stream.empty();
-
-  final carService = ref.read(carServiceProvider);
+  final carService = ref.watch(carServiceProvider);
+  if (carService == null) return const Stream.empty();
   return carService.getCarsForUserStream();
 });
 
-// StreamProvider.family – real-time stream pojedinačnog auta po ID-u
-final carDetailsStreamProvider = StreamProvider.family<CarModel?, String>((ref, carId) {
-  final authUser = ref.watch(authStateChangesProvider).asData?.value;
-  if (authUser == null) return const Stream.empty();
-
-  final carService = ref.read(carServiceProvider);
+// StreamProvider.family – real-time stream pojedinačnog auta
+final carDetailsStreamProvider =
+StreamProvider.family<CarModel?, String>((ref, carId) {
+  final carService = ref.watch(carServiceProvider);
+  if (carService == null) return const Stream.empty();
   return carService.getCarByIdStream(carId);
 });

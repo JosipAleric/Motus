@@ -110,8 +110,8 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final servicesProvider = ref.read(serviceProvider);
-      final carProvider = ref.read(carServiceProvider);
+      final servicesProvider = ref.read(servicesServiceProvider)!;
+      final carProvider = ref.read(carServiceProvider)!;
 
       final double priceValue = double.tryParse(_priceController.text.trim()) ?? 0.0;
       final int mileageValue = int.tryParse(_mileageController.text.trim()) ?? 0;
@@ -128,36 +128,39 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
         invoiceUrl: null,
       );
 
-      final docRef = await servicesProvider.addService(_selectedCarId!, tempService);
+      if (servicesProvider != null) {
+        final docRef = await servicesProvider.addService(_selectedCarId!, tempService);
 
-      String? invoiceUrl;
-      if (_pickedInvoice != null) {
-        invoiceUrl = await _uploadInvoice(docRef.id, currentUser.uid);
-      }
+        String? invoiceUrl;
 
-      if (invoiceUrl != null) {
-        final updatedService = tempService.copyWith(id: docRef.id, invoiceUrl: invoiceUrl);
-        await servicesProvider.updateService( _selectedCarId!, docRef.id, updatedService);
-      }
+        if (_pickedInvoice != null) {
+          invoiceUrl = await _uploadInvoice(docRef.id, currentUser.uid);
+        }
 
-      final currentCar = await carProvider.getCarById(_selectedCarId!);
-      if (currentCar != null && mileageValue > currentCar.mileage) {
-        await carProvider.updateCarMileage(_selectedCarId!, mileageValue);
-        ref.invalidate(carDetailsProvider(_selectedCarId!));
-        ref.invalidate(carsProvider);
-      }
+        if (invoiceUrl != null) {
+          final updatedService = tempService.copyWith(id: docRef.id, invoiceUrl: invoiceUrl);
+          await servicesProvider.updateService(_selectedCarId!, docRef.id, updatedService);
+        }
 
-      if (mounted) {
-        CustomSnackbar.show(
-          context,
-          type: AlertType.success,
-          title: "Uspješno",
-          message: "Servis je uspješno dodan.",
-        );
-        ref.invalidate(servicesPaginatorProvider(_selectedCarId!));
-        ref.invalidate(latestServicesWithCarProvider);
-        ref.invalidate(lastServiceForCarProvider(_selectedCarId!));
-        GoRouter.of(context).pop();
+        final currentCar = await carProvider.getCarById(_selectedCarId!);
+        if (currentCar != null && mileageValue > currentCar.mileage) {
+          await carProvider.updateCarMileage(_selectedCarId!, mileageValue);
+          ref.invalidate(carDetailsProvider(_selectedCarId!));
+          ref.invalidate(carsProvider);
+        }
+
+        if (mounted) {
+          CustomSnackbar.show(
+            context,
+            type: AlertType.success,
+            title: "Uspješno",
+            message: "Servis je uspješno dodan.",
+          );
+          ref.invalidate(servicesPaginatorProvider(_selectedCarId!));
+          ref.invalidate(latestServicesWithCarProvider);
+          ref.invalidate(lastServiceForCarProvider(_selectedCarId!));
+          GoRouter.of(context).pop();
+        }
       }
     } catch (e) {
       CustomSnackbar.show(
@@ -170,6 +173,7 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
       if (mounted) setState(() => _isLoading = false);
     }
   }
+
 
   @override
   void dispose() {

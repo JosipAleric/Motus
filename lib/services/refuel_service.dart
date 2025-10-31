@@ -1,24 +1,18 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/refuel_model.dart';
 import '../models/refuel_statistics_model.dart';
 import '../models/pagination_result.dart';
-import '../providers/user_provider.dart';
 
 class RefuelService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
-  final Ref ref;
+  final String _userId;
 
-  RefuelService(this.ref);
+  RefuelService(this._userId);
 
-  /// ✅ Dohvati userId iz Riverpoda
-  String get _userId {
-    final authUser = ref.read(authStateChangesProvider).asData?.value;
-    if (authUser == null) throw Exception("Korisnik nije prijavljen.");
-    return authUser.uid;
-  }
+  // ----------------------------------------------------------------------
+  // 🔹 Privatni helper
+  // ----------------------------------------------------------------------
 
-  /// ✅ Kolekcija refuela
   CollectionReference<Map<String, dynamic>> _refuelsRef(String carId) {
     return _db
         .collection('users')
@@ -28,7 +22,10 @@ class RefuelService {
         .collection('refuels');
   }
 
+  // ----------------------------------------------------------------------
   // 🔹 Paginated fetch
+  // ----------------------------------------------------------------------
+
   Future<PaginationResult<RefuelModel>> getRefuelsPage(
       String carId, {
         int pageSize = 10,
@@ -50,15 +47,20 @@ class RefuelService {
     );
   }
 
+  // ----------------------------------------------------------------------
   // 🔹 Svi refueli
+  // ----------------------------------------------------------------------
+
   Future<List<RefuelModel>> getRefuels(String carId) async {
-    final snapshot = await _refuelsRef(carId)
-        .orderBy('date', descending: true)
-        .get();
+    final snapshot =
+    await _refuelsRef(carId).orderBy('date', descending: true).get();
     return snapshot.docs.map((d) => RefuelModel.fromMap(d)).toList();
   }
 
+  // ----------------------------------------------------------------------
   // 🔹 Statistika
+  // ----------------------------------------------------------------------
+
   Future<RefuelStatistics?> getRefuelStatistics(String carId) async {
     final snapshot = await _refuelsRef(carId)
         .orderBy('mileageAtRefuel', descending: false)
@@ -100,7 +102,10 @@ class RefuelService {
     );
   }
 
-  // 🔹 Stream refuela
+  // ----------------------------------------------------------------------
+  // 🔹 Streamovi
+  // ----------------------------------------------------------------------
+
   Stream<List<RefuelModel>> getRefuelsStream(String carId) {
     return _refuelsRef(carId)
         .orderBy('date', descending: true)
@@ -108,7 +113,6 @@ class RefuelService {
         .map((s) => s.docs.map((d) => RefuelModel.fromMap(d)).toList());
   }
 
-  // 🔹 Stream statistike
   Stream<RefuelStatistics?> getRefuelStatisticsStream(String carId) {
     return _refuelsRef(carId)
         .orderBy('mileageAtRefuel', descending: false)
@@ -151,7 +155,10 @@ class RefuelService {
     });
   }
 
+  // ----------------------------------------------------------------------
   // 🔹 CRUD
+  // ----------------------------------------------------------------------
+
   Future<void> addRefuel(String carId, RefuelModel refuel) async {
     final refDoc = _refuelsRef(carId).doc();
     await refDoc.set(refuel.copyWith(id: refDoc.id).toMap());

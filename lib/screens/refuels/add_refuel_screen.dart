@@ -46,17 +46,6 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
   Future<void> _saveRefuel() async {
     if (!_formKey.currentState!.validate()) return;
 
-    final authUser = ref.read(authStateChangesProvider).asData?.value;
-    if (authUser == null) {
-      CustomSnackbar.show(
-        context,
-        type: AlertType.error,
-        title: "Greška",
-        message: "Korisnik nije ulogiran",
-      );
-      return;
-    }
-
     setState(() => _isLoading = true);
 
     try {
@@ -88,12 +77,12 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
       );
 
       final refuelService = ref.read(refuelServiceProvider);
-      await refuelService.addRefuel(widget.carId, newRefuel);
+      await refuelService?.addRefuel(widget.carId, newRefuel);
 
       ref.invalidate(refuelStatsProvider(widget.carId));
       ref.invalidate(refuelsPaginatorProvider(widget.carId));
 
-      final carService = ref.read(carServiceProvider);
+      final carService = ref.read(carServiceProvider)!;
       final currentCar = await carService.getCarById(widget.carId);
 
       if (currentCar != null && mileageAtRefuel > (currentCar.mileage ?? 0)) {

@@ -7,12 +7,10 @@ import 'package:motus/widgets/customButton.dart';
 import '../providers/service/service_provider.dart';
 import '../providers/user_provider.dart';
 import '../providers/car_provider.dart';
-import '../theme/app_theme.dart';
 import '../widgets/carCard.dart';
 import '../widgets/customAlert.dart';
 import '../widgets/customAppBar.dart';
 import '../widgets/customServiceCard.dart';
-import '../widgets/customSnackbar.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});

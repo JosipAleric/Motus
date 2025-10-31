@@ -92,7 +92,7 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final carService = ref.read(carServiceProvider);
+      final carService = ref.read(carServiceProvider)!;
 
       final tempCar = CarModel(
         id: '',

@@ -1,43 +1,70 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:motus/services/refuel_service.dart';
 import '../../core/pagination/pagination_state.dart';
 import '../../models/refuel_model.dart';
 import '../../models/refuel_statistics_model.dart';
-import '../../models/pagination_result.dart';
-import '../../services/refuel_service.dart';
 import '../user_provider.dart';
 import 'refuel_pagination_notifier.dart';
 
-final refuelServiceProvider = Provider<RefuelService>((ref) => RefuelService(ref));
+final _currentUserIdProvider = Provider<String?>((ref) {
+  return ref.watch(authStateChangesProvider).asData?.value?.uid;
+});
 
-// StateNotifierProvider za paginaciju refuela
+final refuelServiceProvider = Provider<RefuelService?>((ref) {
+  final userId = ref.watch(_currentUserIdProvider);
+  if (userId == null) return null;
+  return RefuelService(userId);
+});
+
+RefuelService? _getServiceInstance(Ref ref) {
+  return ref.watch(refuelServiceProvider);
+}
+
+// Popis svih refuela za određenog korisnika i auto s paginacijom
 final refuelsPaginatorProvider = StateNotifierProvider.autoDispose
     .family<RefuelsPaginator, PaginationState<RefuelModel>, String>((ref, carId) {
+  final userId = ref.watch(_currentUserIdProvider);
+  if (userId == null) {
+    throw Exception('Paginator se ne može inicijalizirati. Korisnik nije prijavljen.');
+  }
+
   final notifier = RefuelsPaginator(ref, carId);
   notifier.loadPage(0);
-  ref.onDispose(notifier.reset);
   return notifier;
 });
 
-// FutureProvider za sve refuele određenog auta
-final refuelsProvider = FutureProvider.family<List<RefuelModel>, String>((ref, carId) async {
-  final service = ref.read(refuelServiceProvider);
-  return await service.getRefuels(carId);
+// ----------------------------------------------------------------------
+// 5. Future provideri
+// ----------------------------------------------------------------------
+
+final refuelsProvider =
+FutureProvider.autoDispose.family<List<RefuelModel>, String>((ref, carId) async {
+  final service = _getServiceInstance(ref);
+  if (service == null) return [];
+  return service.getRefuels(carId);
 });
 
-// FutureProvider za statistiku refuela određenog auta
-final refuelStatsProvider = FutureProvider.family<RefuelStatistics?, String>((ref, carId) async {
-  final service = ref.read(refuelServiceProvider);
-  return await service.getRefuelStatistics(carId);
+final refuelStatsProvider =
+FutureProvider.autoDispose.family<RefuelStatistics?, String>((ref, carId) async {
+  final service = _getServiceInstance(ref);
+  if (service == null) return null;
+  return service.getRefuelStatistics(carId);
 });
 
-// StreamProvider za refuele određenog auta
-final refuelsStreamProvider = StreamProvider.family<List<RefuelModel>, String>((ref, carId) {
-  final service = ref.watch(refuelServiceProvider);
+// ----------------------------------------------------------------------
+// 6. Stream provideri
+// ----------------------------------------------------------------------
+
+final refuelsStreamProvider =
+StreamProvider.autoDispose.family<List<RefuelModel>, String>((ref, carId) {
+  final service = _getServiceInstance(ref);
+  if (service == null) return const Stream.empty();
   return service.getRefuelsStream(carId);
 });
 
-// StreamProvider za statistiku refuela određenog auta
-final refuelStatsStreamProvider = StreamProvider.family<RefuelStatistics?, String>((ref, carId) {
-  final service = ref.watch(refuelServiceProvider);
+final refuelStatsStreamProvider =
+StreamProvider.autoDispose.family<RefuelStatistics?, String>((ref, carId) {
+  final service = _getServiceInstance(ref);
+  if (service == null) return const Stream.empty();
   return service.getRefuelStatisticsStream(carId);
 });
