@@ -44,7 +44,8 @@ class _LoginScreenState extends State<LoginScreen> {
         context,
         type: AlertType.error,
         title: "Greška!",
-        message: "Došlo je do greške prilikom prijave. Provjerite svoje podatke ili pokušajte ponovo.",
+        message:
+            "Došlo je do greške prilikom prijave. Provjerite svoje podatke ili pokušajte ponovo.",
       );
     } finally {
       setState(() => _loading = false);
@@ -132,10 +133,7 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  Widget _buildSocialButton({
-    required String label,
-    required String icon,
-  }) {
+  Widget _buildSocialButton({required String label, required String icon}) {
     return Expanded(
       child: TextButton.icon(
         icon: IconifyIcon(
@@ -154,9 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10.0),
-            side: BorderSide(
-              color: Colors.black.withOpacity(0.1),
-            ),
+            side: BorderSide(color: Colors.black.withOpacity(0.1)),
           ),
         ),
         onPressed: _login,
@@ -175,130 +171,170 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
     return Scaffold(
+      resizeToAvoidBottomInset: true,
       backgroundColor: AppColors.primary,
-      body: Column(
-        children: [
-          const SizedBox(height: 100),
-          SvgPicture.asset('assets/images/logo.svg', width: 35, height: 35),
-          const SizedBox(height: 10),
-          const Text(
-            'MOTUS',
-            style: TextStyle(
-              fontFamily: 'Michroma',
-              fontSize: 24,
-              color: Colors.white,
-            ),
-          ),
-          const SizedBox(height: 50),
-          Expanded(
-            child: Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(topLeft: Radius.circular(80)),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 35, vertical: 10),
-              child: Form(
-                key: _formKey,
-                child: ListView(
-                  children: [
-                    Center(
-                      child: const Text(
-                        'Prijava',
-                        style: TextStyle(
-                          fontFamily: 'MPlus1',
-                          fontSize: 28,
-                          fontWeight: FontWeight.w500,
-                          letterSpacing: 1.5,
+      body: SafeArea(
+        bottom: false,
+        child: Container(
+          alignment: Alignment.center,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(0),
+                child: ConstrainedBox(
+                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                  child: IntrinsicHeight(
+                    child: Column(
+                      children: [
+                        const SizedBox(height: 80),
+                        SvgPicture.asset(
+                          'assets/images/logo.svg',
+                          width: 35,
+                          height: 35,
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 30),
-                    _buildEmailField(),
-                    const SizedBox(height: 20),
-                    _buildPasswordField(),
-                    const SizedBox(height: 15),
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: Text(
-                        'Zaboravljena lozinka?',
-                        style: TextStyle(
-                          color: const Color(0xFF8F8F8F),
-                          fontFamily: 'MPlus1',
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1.2,
+                        const SizedBox(height: 10),
+                        const Text(
+                          'MOTUS',
+                          style: TextStyle(
+                            fontFamily: 'Michroma',
+                            fontSize: 24,
+                            color: Colors.white,
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-                    CustomButton(
-                      text: 'Prijavi se',
-                      onPressed: _login,
-                      icon: 'solar:login-bold',
-                      fontSize: 14,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 15,
-                        horizontal: 30,
-                      ),
-                      fontWeight: FontWeight.w700,
-                      borderRadius: 10.0,
-                      letterSpacing: 3,
-                      isLoading: _loading,
-                    ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: const [
-                        Expanded(child: Divider(color: AppColors.divider)),
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20.0),
-                          child: Text(
-                            'ili',
-                            style: TextStyle(
-                              fontSize: 14.0,
-                              fontWeight: FontWeight.w600,
-                              color: AppColors.textSecondary,
+                        const SizedBox(height: 50),
+                        Expanded(
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.only(
+                                topLeft: Radius.circular(80),
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 35,
+                              vertical: 40,
+                            ),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                children: [
+                                  Center(
+                                    child: const Text(
+                                      'Prijava',
+                                      style: TextStyle(
+                                        fontFamily: 'MPlus1',
+                                        fontSize: 28,
+                                        fontWeight: FontWeight.w500,
+                                        letterSpacing: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 30),
+                                  _buildEmailField(),
+                                  const SizedBox(height: 20),
+                                  _buildPasswordField(),
+                                  const SizedBox(height: 15),
+                                  Align(
+                                    alignment: Alignment.centerRight,
+                                    child: Text(
+                                      'Zaboravljena lozinka?',
+                                      style: TextStyle(
+                                        color: const Color(0xFF8F8F8F),
+                                        fontFamily: 'MPlus1',
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 1.2,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 15),
+                                  SizedBox(
+                                    width: double.infinity,
+                                    child: CustomButton(
+                                      text: 'Prijavi se',
+                                      onPressed: _login,
+                                      icon: 'solar:login-bold',
+                                      fontSize: 14,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 15,
+                                        horizontal: 30,
+                                      ),
+                                      fontWeight: FontWeight.w700,
+                                      borderRadius: 10.0,
+                                      letterSpacing: 3,
+                                      isLoading: _loading,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Row(
+                                    children: const [
+                                      Expanded(
+                                        child: Divider(
+                                          color: AppColors.divider,
+                                        ),
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 20.0,
+                                        ),
+                                        child: Text(
+                                          'ili',
+                                          style: TextStyle(
+                                            fontSize: 14.0,
+                                            fontWeight: FontWeight.w600,
+                                            color: AppColors.textSecondary,
+                                          ),
+                                        ),
+                                      ),
+                                      Expanded(
+                                        child: Divider(
+                                          color: AppColors.divider,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 20),
+                                  Row(
+                                    children: [
+                                      _buildSocialButton(
+                                        label: 'Google',
+                                        icon: 'material-icon-theme:google',
+                                      ),
+                                      const SizedBox(width: 15),
+                                      _buildSocialButton(
+                                        label: 'Facebook',
+                                        icon: 'logos:facebook',
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  TextButton(
+                                    onPressed: () =>
+                                        GoRouter.of(context).go("/register"),
+                                    child: const Text(
+                                      'Nemate račun? Registrirajte se!',
+                                      style: TextStyle(
+                                        color: AppColors.textSecondary,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        letterSpacing: 1,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                        Expanded(child: Divider(color: AppColors.divider)),
                       ],
                     ),
-                    const SizedBox(height: 20),
-                    Row(
-                      children: [
-                        _buildSocialButton(
-                          label: 'Google',
-                          icon: 'material-icon-theme:google',
-                        ),
-                        const SizedBox(width: 15),
-                        _buildSocialButton(
-                          label: 'Facebook',
-                          icon: 'logos:facebook',
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    TextButton(
-                      onPressed: () =>
-                          GoRouter.of(context).go("/register"),
-                      child: const Text(
-                        'Nemate račun? Registrirajte se!',
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ),
+              );
+            },
           ),
-        ],
+        ),
       ),
-
     );
   }
 }

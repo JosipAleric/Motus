@@ -13,6 +13,8 @@ import '../../widgets/customButton.dart';
 import '../../widgets/customServiceCard.dart';
 import '../../widgets/customSnackbar.dart';
 
+final loadingProvider = StateProvider<bool>((ref) => false);
+
 class CarDetailsScreen extends ConsumerWidget {
   final String carId;
 
@@ -22,8 +24,11 @@ class CarDetailsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final carAsync = ref.watch(carDetailsProvider(carId));
     final latestServiceForCarAsync = ref.watch(lastServiceForCarProvider(carId));
+    final _isLoading = ref.watch(loadingProvider);
 
     void _deleteCar() async {
+      ref.read(loadingProvider.notifier).state = true;
+
       try {
         final carDeletionResult = await ref.read(carServiceProvider)!;
         await carDeletionResult.deleteCar(carId);
@@ -48,6 +53,9 @@ class CarDetailsScreen extends ConsumerWidget {
             message: "Došlo je do greške prilikom brisanja vozila. Pokušajte ponovo.",
           );
         }
+      }
+      finally {
+        ref.read(loadingProvider.notifier).state = false;
       }
     }
 
@@ -316,10 +324,23 @@ class CarDetailsScreen extends ConsumerWidget {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const IconifyIcon(icon: "fluent:delete-32-regular", size: 20, color: Colors.red),
-                              const SizedBox(width: 10),
-                              const Text(
-                                'Obriši vozilo',
+                              _isLoading
+                                  ? SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.red,
+                                ),
+                              )
+                                  : const IconifyIcon(
+                                icon: "fluent:delete-32-regular",
+                                size: 20,
+                                color: Colors.red,
+                              ),
+                              SizedBox(width: _isLoading ? 0 : 10),
+                              Text(
+                                _isLoading ? '' : 'Obriši vozilo',
                                 style: TextStyle(
                                   fontWeight: FontWeight.w600,
                                   color: Colors.red,
@@ -327,6 +348,7 @@ class CarDetailsScreen extends ConsumerWidget {
                               ),
                             ],
                           ),
+
                           onPressed: () {
                             showDialog(
                               context: context,
@@ -339,7 +361,7 @@ class CarDetailsScreen extends ConsumerWidget {
                                     TextButton(
                                       child: const Text('Otkaži'),
                                       onPressed: () {
-                                        Navigator.of(context).pop();
+                                        GoRouter.of(context).pop();
                                       },
                                     ),
                                     TextButton(
@@ -348,7 +370,7 @@ class CarDetailsScreen extends ConsumerWidget {
                                         style: TextStyle(color: Colors.red),
                                       ),
                                       onPressed: () {
-                                        Navigator.of(context).pop();
+                                        GoRouter.of(context).pop();
                                         _deleteCar();
                                       },
                                     ),

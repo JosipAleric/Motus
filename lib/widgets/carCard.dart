@@ -7,6 +7,7 @@ class CarCard extends StatelessWidget {
   final String model;
   final String imageUrl;
   final String badgeText;
+  final String vehicleType;
   final int year;
   final int mileage;
   final VoidCallback onDetailsTap;
@@ -19,6 +20,7 @@ class CarCard extends StatelessWidget {
     required this.year,
     required this.mileage,
     required this.badgeText,
+    required this.vehicleType,
     required this.onDetailsTap,
   }) : super(key: key);
 
@@ -69,7 +71,7 @@ class CarCard extends StatelessWidget {
                         ),
                         const SizedBox(height: 1),
                         Text(
-                          model,
+                          model + ' ' + vehicleType,
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,

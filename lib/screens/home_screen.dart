@@ -90,6 +90,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                 child: CarCard(
                                   brand: car.brand,
                                   model: car.model,
+                                  vehicleType: car.vehicle_type,
                                   imageUrl: "/assets/images/car.png",
                                   year: car.year,
                                   mileage: car.mileage,

@@ -67,28 +67,54 @@ class CarService {
   }
 
   Future<void> deleteCar(String carId) async {
-    await _userCarsCollection.doc(carId).delete();
-
-    final storagePath = 'users/$userId/cars/$carId/';
-    final storageRef = _storage.ref().child(storagePath);
+    final carDocRef = _userCarsCollection.doc(carId);
 
     try {
-      final listResult = await storageRef.listAll();
+      await _deleteSubcollection(carDocRef, 'services');
+      await _deleteSubcollection(carDocRef, 'refuels');
+
+      await carDocRef.delete();
+      print('Firestore: deleted car document $carId');
+
+      final storagePath = 'users/$userId/cars/$carId/';
+      await _deleteStorageFolder(storagePath);
+
+      print('Completed delete for carId: $carId');
+    } catch (e) {
+      print('Error deleting car: $e');
+    }
+  }
+
+  Future<void> _deleteSubcollection(DocumentReference parentRef, String subcollectionName) async {
+    final subRef = parentRef.collection(subcollectionName);
+    final subDocs = await subRef.get();
+
+    for (final doc in subDocs.docs) {
+      await doc.reference.delete();
+      print('Deleted doc: ${doc.reference.path}');
+    }
+  }
+
+  Future<void> _deleteStorageFolder(String path) async {
+    final folderRef = _storage.ref().child(path);
+
+    try {
+      final listResult = await folderRef.listAll();
 
       for (final item in listResult.items) {
         await item.delete();
         print('Deleted file: ${item.fullPath}');
       }
 
-      print('✅ Successfully deleted all car images for carId: $carId');
+      for (final prefix in listResult.prefixes) {
+        await _deleteStorageFolder(prefix.fullPath);
+      }
     } on FirebaseException catch (e) {
       if (e.code == 'object-not-found') {
-        print('Storage path not found or empty: $storagePath');
+        print('Storage path not found: $path');
       } else {
-        print('Error deleting car images: ${e.code} - ${e.message}');
+        print('Error deleting folder: ${e.code} - ${e.message}');
       }
-    } catch (e) {
-      print('Unexpected error deleting car: $e');
     }
   }
 }

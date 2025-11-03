@@ -48,7 +48,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         context,
         type: AlertType.error,
         title: "Greška!",
-        message: "Došlo je do greške prilikom registracije. Provjerite svoje podatke ili pokušajte ponovo.",
+        message:
+            "Došlo je do greške prilikom registracije. Provjerite svoje podatke ili pokušajte ponovo.",
       );
     } finally {
       setState(() => _loading = false);
@@ -60,6 +61,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     required String label,
     required String icon,
     bool obscure = false,
+    bool capitalize = true,
     required String? Function(String?) validator,
   }) {
     return Container(
@@ -78,6 +80,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
         style: TextStyle(fontSize: 14),
         controller: controller,
         obscureText: obscure,
+        textCapitalization:
+            capitalize ? TextCapitalization.words : TextCapitalization.none,
         validator: validator,
         decoration: InputDecoration(
           suffixIcon: Padding(
@@ -120,12 +124,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.primary,
       resizeToAvoidBottomInset: true,
-      body: Container(
-        alignment: Alignment.center,
-        color: AppColors.primary,
-        child: LayoutBuilder(
+      body: SafeArea(
+        bottom: false,
+        child: Container(
+          alignment: Alignment.center,
+          child: LayoutBuilder(
             builder: (context, constraints) {
               return SingleChildScrollView(
                 padding: EdgeInsets.zero,
@@ -134,12 +139,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   child: IntrinsicHeight(
                     child: Column(
                       children: [
-                        // Gornji logo
                         Container(
-                          margin: const EdgeInsets.only(bottom: 50, top: 50),
+                          margin: const EdgeInsets.only(bottom: 50),
                           child: Column(
                             children: [
-                              const SizedBox(height: 50),
+                              const SizedBox(height: 60),
                               SvgPicture.asset(
                                 'assets/images/logo.svg',
                                 width: 35,
@@ -158,83 +162,87 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           ),
                         ),
 
-                        // Donji dio
                         Expanded(
                           child: Container(
-                              decoration: const BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.only(
-                                  topRight: Radius.circular(80),
-                                ),
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.only(
+                                topRight: Radius.circular(80),
                               ),
-                              padding: const EdgeInsets.fromLTRB(35, 30, 35, 30),
-                              child: Form(
-                                key: _formKey,
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Text(
-                                      'Registracija',
-                                      style: TextStyle(
-                                        fontFamily: 'MPlus1',
-                                        fontSize: 27,
-                                        fontWeight: FontWeight.w500,
-                                        letterSpacing: 1.7,
-                                        color: Color(0xFF373737),
-                                      ),
+                            ),
+                            padding: const EdgeInsets.fromLTRB(35, 30, 35, 30),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    'Registracija',
+                                    style: TextStyle(
+                                      fontFamily: 'MPlus1',
+                                      fontSize: 27,
+                                      fontWeight: FontWeight.w500,
+                                      letterSpacing: 1.7,
+                                      color: Color(0xFF373737),
                                     ),
-                                    const SizedBox(height: 30),
-                                    buildTextField(
-                                      controller: _firstNameController,
-                                      label: 'Ime',
-                                      icon: 'solar:user-broken',
-                                      validator: (v) =>
-                                          v!.isEmpty ? 'Unesite ime' : null,
-                                    ),
-                                    buildTextField(
-                                      controller: _lastNameController,
-                                      label: 'Prezime',
-                                      icon: 'fluent:rename-a-20-regular',
-                                      validator: (v) =>
-                                          v!.isEmpty ? 'Unesite prezime' : null,
-                                    ),
-                                    buildTextField(
-                                      controller: _emailController,
-                                      label: 'Email',
-                                      icon: 'mdi-light:email',
-                                      validator: (v) =>
-                                          v!.isEmpty ? 'Unesite email' : null,
-                                    ),
-                                    buildTextField(
-                                      controller: _passwordController,
-                                      label: 'Lozinka',
-                                      icon: 'solar:lock-password-unlocked-broken',
-                                      obscure: true,
-                                      validator: (v) =>
-                                          v!.isEmpty ? 'Unesite lozinku' : null,
-                                    ),
-                                    Transform.translate(
-                                      offset: Offset(0, -15),
-                                      child: Column(
-                                        children: [
-                                          Align(
-                                            alignment: Alignment.centerRight,
-                                            child:     TextButton(
-                                              onPressed: () =>
-                                                  GoRouter.of(context).go('/login',),
-                                              child: const Text(
-                                                'Već imate račun? Prijavite se!',
-                                                style: TextStyle(
-                                                  color: Color(0xFF737373),
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600,
-                                                  letterSpacing: 1,
-                                                ),
+                                  ),
+                                  const SizedBox(height: 30),
+                                  buildTextField(
+                                    controller: _firstNameController,
+                                    label: 'Ime',
+                                    icon: 'solar:user-broken',
+                                    validator: (v) =>
+                                        v!.isEmpty ? 'Unesite ime' : null,
+                                  ),
+                                  buildTextField(
+                                    controller: _lastNameController,
+                                    label: 'Prezime',
+                                    icon: 'fluent:rename-a-20-regular',
+                                    validator: (v) =>
+                                        v!.isEmpty ? 'Unesite prezime' : null,
+                                  ),
+                                  buildTextField(
+                                    controller: _emailController,
+                                    label: 'Email',
+                                    icon: 'mdi-light:email',
+                                    capitalize: false,
+                                    validator: (v) =>
+                                        v!.isEmpty ? 'Unesite email' : null,
+                                  ),
+                                  buildTextField(
+                                    controller: _passwordController,
+                                    label: 'Lozinka',
+                                    icon: 'solar:lock-password-unlocked-broken',
+                                    obscure: true,
+                                    capitalize: false,
+                                    validator: (v) =>
+                                        v!.isEmpty ? 'Unesite lozinku' : null,
+                                  ),
+                                  Transform.translate(
+                                    offset: Offset(0, -15),
+                                    child: Column(
+                                      children: [
+                                        Align(
+                                          alignment: Alignment.centerRight,
+                                          child: TextButton(
+                                            onPressed: () => GoRouter.of(
+                                              context,
+                                            ).go('/login'),
+                                            child: const Text(
+                                              'Već imate račun? Prijavite se!',
+                                              style: TextStyle(
+                                                color: Color(0xFF737373),
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                letterSpacing: 1,
                                               ),
                                             ),
                                           ),
+                                        ),
 
-                                          CustomButton(
+                                        SizedBox(
+                                          width: double.infinity,
+                                          child: CustomButton(
                                             text: 'Registriraj se',
                                             onPressed: _register,
                                             icon: 'mdi:register',
@@ -242,20 +250,40 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                             fontWeight: FontWeight.w800,
                                             iconSize: 25,
                                             letterSpacing: 4,
-                                            padding: EdgeInsets.symmetric(vertical: 15),
+                                            padding: EdgeInsets.symmetric(
+                                              vertical: 15,
+                                            ),
                                             isLoading: _loading,
                                             fontFamily: "MPlus1",
                                           ),
-                                        ],
-                                      ),
+                                        ),
+                                      ],
                                     ),
+                                  ),
 
-                                    const SizedBox(height: 20),
-
-                                  ],
-                                ),
+                                  const SizedBox(height: 20),
+                                ],
                               ),
                             ),
+                          ),
+                        ),
+                        Container(
+                          width: double.infinity,
+                          alignment: Alignment.center,
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          decoration: BoxDecoration(color: Colors.white),
+                          child: Padding(
+                            padding: EdgeInsets.only(bottom: 25),
+                            child: Text(
+                              '${DateTime.now().year} Motus - Copyright ©',
+                              style: TextStyle(
+                                color: AppColors.textSecondary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
                         ),
                       ],
                     ),
@@ -265,6 +293,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             },
           ),
         ),
+      ),
     );
   }
 }

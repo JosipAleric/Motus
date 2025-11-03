@@ -181,7 +181,7 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
                 controller: _modelController,
                 label: 'Model vozila',
                 icon: 'ph:steering-wheel-bold',
-                hint: 'Golf 7 Variant',
+                hint: 'Golf 7',
                 validator: (v) => v!.isEmpty ? 'Obavezno' : null,
               ),
               CustomTextField(
@@ -228,7 +228,7 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
                 controller: _mileageController,
                 label: 'Kilometraža',
                 icon: 'stash:data-numbers',
-                hint: '182440',
+                hint: '182 440',
                 suffixText: "KM",
                 keyboardType: TextInputType.number,
                 validator: (v) => v!.isEmpty ? 'Obavezno' : null,
@@ -260,7 +260,7 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
               const SizedBox(height: 8),
               _buildDropdown(
                 'Vrsta vozila',
-                'fluent:transmission-20-regular',
+                'ion:car-sport-outline',
                 _vehicle_types,
                 _selectedVehicleType,
                     (val) => setState(() => _selectedVehicleType = val),
@@ -311,11 +311,11 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
         children: [
           Row(
             children: [
-              const IconifyIcon(icon: 'jam:picture-edit', color: Color(0xFF4E4E4E), size: 17),
-              const SizedBox(width: 4),
+              const IconifyIcon(icon: 'jam:picture-edit', color: Color(0xFF4E4E4E), size: 15),
+              const SizedBox(width: 6),
               const Text(
                 'Slika vozila',
-                style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF4E4E4E), fontSize: 16),
+                style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF4E4E4E), fontSize: 15),
               ),
             ],
           ),
