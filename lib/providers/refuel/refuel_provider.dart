@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:motus/models/refuel_car_model.dart';
 import 'package:motus/services/refuel_service.dart';
 import '../../core/pagination/pagination_state.dart';
 import '../../models/refuel_model.dart';
@@ -50,6 +51,19 @@ FutureProvider.autoDispose.family<RefuelStatistics?, String>((ref, carId) async 
   if (service == null) return null;
   return service.getRefuelStatistics(carId);
 });
+
+final refuelByIdProvider = FutureProvider.autoDispose
+    .family<RefuelCar?, ({String carId, String refuelId})>((ref, params) async {
+  final service = _getServiceInstance(ref);
+  if (service == null) return null;
+
+  return service.getRefuelDetailsById(
+    refuelId: params.refuelId,
+    carId: params.carId,
+  );
+});
+
+
 
 // ----------------------------------------------------------------------
 // Stream providers

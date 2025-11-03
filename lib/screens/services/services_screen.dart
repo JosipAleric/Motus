@@ -43,7 +43,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                 ? const CustomAlert(
                     type: AlertType.info,
                     title: "Nema vozila",
-                    message: "Dodajte vozilo da biste vidjeli servise.",
+                    message: "Dodajte vozilo da biste pratili povijest održavanja servisa.",
                   )
                 : const CircularProgressIndicator(),
             loading: () => const CircularProgressIndicator(),

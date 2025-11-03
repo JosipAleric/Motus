@@ -78,10 +78,9 @@ FutureProvider.autoDispose.family<Map<String, dynamic>?, String>((ref, carId) as
 
 // Detailed service with car info
 final serviceDetailsWithCarProvider =
-FutureProvider.autoDispose.family<ServiceCar?, (String, String)>((ref, ids) async {
-  final (carId, serviceId) = ids;
+FutureProvider.autoDispose.family<ServiceCar?, ({String carId, String serviceId})>((ref, params) async {
   final service = _getServiceInstance(ref);
   if (service == null) return null;
 
-  return service.getServiceWithCar(carId, serviceId);
+  return service.getServiceWithCar(carId: params.carId, serviceId: params.serviceId);
 });

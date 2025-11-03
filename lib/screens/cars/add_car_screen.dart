@@ -83,7 +83,7 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
         context,
         type: AlertType.warning,
         title: "Upozorenje",
-        message: "Molimo odaberite tip goriva i mjenjač.",
+        message: "Molimo odaberite tip goriva i/ili vrstu mjenjača.",
       );
       return;
     }
@@ -125,8 +125,8 @@ class _AddCarScreenState extends ConsumerState<AddCarScreen> {
         CustomSnackbar.show(
           context,
           type: AlertType.success,
-          title: "Uspjeh",
-          message: "Vozilo je uspješno dodano.",
+          title: "Uspješno",
+          message: "Vozilo je uspješno dodano u bazu podataka.",
         );
         ref.invalidate(carsProvider);
         GoRouter.of(context).pop();

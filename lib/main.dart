@@ -9,7 +9,10 @@ import 'package:motus/screens/cars/edit_car_screen.dart';
 import 'package:motus/screens/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:motus/screens/refuels/add_refuel_screen.dart';
+import 'package:motus/screens/refuels/edit_refuel_screen.dart';
+import 'package:motus/screens/refuels/refuel_details_screen.dart';
 import 'package:motus/screens/refuels/refuels_screen.dart';
+import 'package:motus/screens/services/edit_service_screen.dart';
 import 'package:motus/widgets/customDrawer.dart';
 import 'firebase_options.dart';
 
@@ -103,6 +106,15 @@ final _router = GoRouter(
                 return ServiceDetailsScreen(serviceId: serviceId, carId: carId);
               },
             ),
+            GoRoute(
+              path: 'update/:serviceId/:carId',
+              name: 'update_service',
+              builder: (_, state) {
+                final serviceId = state.pathParameters['serviceId']!;
+                final carId = state.pathParameters['carId']!;
+                return EditServiceScreen(serviceId: serviceId, carId: carId);
+              },
+            ),
           ],
         ),
         GoRoute(
@@ -116,6 +128,24 @@ final _router = GoRouter(
               builder: (_, state) {
                 final carId = state.pathParameters['carId']!;
                 return AddRefuelScreen(carId: carId);
+              },
+            ),
+            GoRoute(
+              path: 'refuel_details/:refuelId/:carId',
+              name: 'refuel_details',
+              builder: (_, state) {
+                final refuelId = state.pathParameters['refuelId']!;
+                final carId = state.pathParameters['carId']!;
+                return RefuelDetailsScreen(refuelId: refuelId, carId: carId);
+              },
+            ),
+            GoRoute(
+              path: 'update_refuel/:refuelId/:carId',
+              name: 'update_refuel',
+              builder: (_, state) {
+                final refuelId = state.pathParameters['refuelId']!;
+                final carId = state.pathParameters['carId']!;
+                return EditRefuelScreen(refuelId: refuelId, carId: carId);
               },
             ),
           ],

@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:motus/models/refuel_car_model.dart';
+import '../models/car_model.dart';
 import '../models/refuel_model.dart';
 import '../models/refuel_statistics_model.dart';
 import '../models/pagination_result.dart';
@@ -32,10 +34,23 @@ class RefuelService {
     final snapshot = await q.get();
     final items = snapshot.docs.map((d) => RefuelModel.fromMap(d)).toList();
 
+    bool hasMore = false;
+    try{
+      final nextPage = await q.startAfterDocument(snapshot.docs.last).get();
+      if(nextPage.docs.isNotEmpty){
+        hasMore = true;
+      } else {
+        hasMore = false;
+      }
+    }
+    catch(e){
+      print(e);
+    }
+
     return PaginationResult(
       items: items,
       lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
-      hasMore: snapshot.docs.length == pageSize,
+      hasMore: hasMore,
     );
   }
 
@@ -45,6 +60,31 @@ class RefuelService {
     return snapshot.docs.map((d) => RefuelModel.fromMap(d)).toList();
   }
 
+  Future<RefuelCar?> getRefuelDetailsById({required String carId, required String refuelId}) async {
+    final refuelDoc = await _refuelsRef(carId).doc(refuelId).get();
+
+    if (!refuelDoc.exists) {
+      return null;
+    }
+
+    final refuel = RefuelModel.fromMap(refuelDoc);
+
+    final carDoc = await _db
+        .collection('users')
+        .doc(_userId)
+        .collection('cars')
+        .doc(carId)
+        .get();
+
+    if (!carDoc.exists) {
+      throw Exception("Auto ne postoji");
+    }
+
+    final car = CarModel.fromMap(carDoc.data()!, carDoc.id);
+
+    return RefuelCar(refuel: refuel, car: car);
+
+  }
 
   Future<RefuelStatistics?> getRefuelStatistics(String carId) async {
     final snapshot = await _refuelsRef(carId)
@@ -144,16 +184,16 @@ class RefuelService {
   // CRUD
   // ----------------------------------------------------------------------
 
-  Future<void> addRefuel(String carId, RefuelModel refuel) async {
+  Future<void> addRefuel({required String carId, required RefuelModel refuel}) async {
     final refDoc = _refuelsRef(carId).doc();
     await refDoc.set(refuel.copyWith(id: refDoc.id).toMap());
   }
 
-  Future<void> updateRefuel(String carId, RefuelModel refuel) async {
+  Future<void> updateRefuel({required String carId, required RefuelModel refuel}) async {
     await _refuelsRef(carId).doc(refuel.id).update(refuel.toMap());
   }
 
-  Future<void> deleteRefuel(String carId, String refuelId) async {
+  Future<void> deleteRefuel({required String carId, required String refuelId}) async {
     await _refuelsRef(carId).doc(refuelId).delete();
   }
 }

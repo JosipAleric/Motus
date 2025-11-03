@@ -56,7 +56,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
           if (user == null) {
             return const Padding(
               padding: EdgeInsets.all(20),
-              child: CustomAlert(
+              child: const CustomAlert(
                 type: AlertType.info,
                 title: "Greška",
                 message: "Korisnik nije prijavljen.",
@@ -151,7 +151,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                               if (serviceWithCar.isEmpty) {
                                 return const Padding(
                                   padding: EdgeInsets.symmetric(vertical: 5),
-                                  child: CustomAlert(
+                                  child: const CustomAlert(
                                     type: AlertType.info,
                                     title: 'Obavijest',
                                     message:

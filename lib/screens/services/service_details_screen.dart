@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:iconify_design/iconify_design.dart';
+import 'package:motus/widgets/customSnackbar.dart';
 import '../../providers/service/service_provider.dart';
 import '../../theme/app_theme.dart';
 import '../../widgets/customAlert.dart';
 import '../../widgets/customAppBar.dart';
 import '../../widgets/customButton.dart';
+
+final isLoadingProvider = StateProvider<bool>((ref) => false);
 
 class ServiceDetailsScreen extends ConsumerWidget {
   final String serviceId;
@@ -20,21 +24,75 @@ class ServiceDetailsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final serviceAsync = ref.watch(
-      serviceDetailsWithCarProvider((carId, serviceId)),
+      serviceDetailsWithCarProvider((carId: carId, serviceId: serviceId)),
     );
 
-    String formattedMileage (int mileage) {
-      switch(mileage.toString().length) {
+    bool _isLoading = ref.watch(isLoadingProvider);
+
+    Future<void> _deleteService() async {
+      ref.read(isLoadingProvider.notifier).state = true;
+
+      try {
+        await ref
+            .read(servicesServiceProvider)
+            ?.deleteService(carId: carId, serviceId: serviceId);
+        if (context.mounted) {
+          GoRouter.of(context).pop();
+          ref.invalidate(
+            serviceDetailsWithCarProvider((carId: carId, serviceId: serviceId)),
+          );
+          ref.invalidate(
+            servicesPaginatorProvider(carId),
+          );
+          ref.invalidate(latestServicesWithCarProvider);
+          ref.invalidate(lastServiceForCarProvider);
+
+          CustomSnackbar.show(
+            context,
+            type: AlertType.success,
+            title: "Uspješno!",
+            message:
+            "Servis je uspješno obrisan iz baze podataka.",
+          );
+        }
+      } catch (e) {
+        if (context.mounted) {
+          CustomSnackbar.show(
+            context,
+            type: AlertType.error,
+            title: "Greška!",
+            message:
+            "Došlo je do greške prilikom brisanja servisa. Pokušajte ponovo kasnije.",
+          );
+        }
+      } finally {
+        ref.read(isLoadingProvider.notifier).state = false;
+      }
+    }
+
+    String formattedMileage(int mileage) {
+      switch (mileage.toString().length) {
         case 4:
-          return mileage.toString().substring(0, 1) + ' ' + mileage.toString().substring(1) + ' km';
+          return mileage.toString().substring(0, 1) +
+              ' ' +
+              mileage.toString().substring(1) +
+              ' km';
         case 5:
-          return mileage.toString().substring(0, 2) + ' ' + mileage.toString().substring(2) + ' km';
+          return mileage.toString().substring(0, 2) +
+              ' ' +
+              mileage.toString().substring(2) +
+              ' km';
         case 6:
-          return mileage.toString().substring(0, 3) + ' ' + mileage.toString().substring(3) + ' km';
+          return mileage.toString().substring(0, 3) +
+              ' ' +
+              mileage.toString().substring(3) +
+              ' km';
         default:
           return mileage.toString() + ' km';
       }
     }
+
+    final isLoading = ref.watch(isLoadingProvider);
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -45,7 +103,7 @@ class ServiceDetailsScreen extends ConsumerWidget {
         ),
         subtitle: serviceAsync.when(
           data: (data) =>
-              data?.car != null ? "${data!.car.year} ${data.car.model}" : "",
+          data?.car != null ? "${data!.car.year} ${data.car.model}" : "",
           loading: () => "Učitavanje...",
           error: (err, _) => "",
         ),
@@ -56,9 +114,10 @@ class ServiceDetailsScreen extends ConsumerWidget {
             return const Padding(
               padding: EdgeInsets.all(20),
               child: CustomAlert(
-                type: AlertType.info,
-                title: "Nema podataka",
-                message: "Servis nije pronađen u bazi.",
+                type: AlertType.error,
+                title: "Greška",
+                message:
+                "Servis nije pronađen u bazi. Molimo pokušajte ponovo kasnije.",
               ),
             );
           }
@@ -72,7 +131,6 @@ class ServiceDetailsScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 10),
-
                 Center(
                   child: Image.asset(
                     'assets/images/car.png',
@@ -80,9 +138,7 @@ class ServiceDetailsScreen extends ConsumerWidget {
                     fit: BoxFit.contain,
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -90,8 +146,8 @@ class ServiceDetailsScreen extends ConsumerWidget {
                     Row(
                       children: [
                         const Padding(
-                          padding: const EdgeInsets.only(top: 3.0),
-                          child: const IconifyIcon(
+                          padding: EdgeInsets.only(top: 3.0),
+                          child: IconifyIcon(
                             icon: 'mdi:chevron-right',
                             color: Colors.black87,
                             size: 24,
@@ -148,9 +204,7 @@ class ServiceDetailsScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 20),
-
                 buildServiceDetailColumn(
                   context,
                   "Vrsta servisa",
@@ -191,14 +245,29 @@ class ServiceDetailsScreen extends ConsumerWidget {
                       : "Nema napomena.",
                   'hugeicons:note',
                 ),
-
                 const SizedBox(height: 15),
-
                 Row(
                   children: [
                     Expanded(
                       child: CustomButton(
-                        onPressed: () => {},
+                        onPressed: () => {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: const Text('Račun servisa'),
+                              content: service.invoiceUrl != null
+                                  ? Image.network(service.invoiceUrl!)
+                                  : const Text(
+                                  'Nema dostupnog računa za ovaj servis.'),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.of(context).pop(),
+                                  child: const Text('Zatvori'),
+                                ),
+                              ],
+                            ),
+                          )
+                        },
                         text: 'Pogledaj račun',
                         icon: 'hugeicons:invoice',
                         padding: const EdgeInsets.symmetric(vertical: 13),
@@ -207,21 +276,124 @@ class ServiceDetailsScreen extends ConsumerWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-
                     const SizedBox(width: 8),
-
                     Expanded(
                       child: CustomButton(
-                        onPressed: () => {},
+                        onPressed: () => {
+                          GoRouter.of(context).pushNamed(
+                            'update_service',
+                            pathParameters: {
+                              'serviceId': service.id,
+                              'carId': car.id,
+                            },
+                          )
+                        },
                         text: 'Uredi',
                         icon: 'tabler:edit',
-                        //isLoading: _isLoading,
                         padding: const EdgeInsets.symmetric(vertical: 13),
                         letterSpacing: 1.5,
                         borderRadius: 5.0,
                       ),
                     ),
                   ],
+                ),
+                const SizedBox(height: 15),
+                const Row(
+                  children: [
+                    Expanded(
+                      child: Divider(
+                        color: AppColors.divider,
+                        thickness: 1,
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Text(
+                      'ili',
+                      style: TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    SizedBox(width: 10),
+                    Expanded(
+                      child: Divider(
+                        color: AppColors.divider,
+                        thickness: 1,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 15),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton.tonal(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: Colors.red.withOpacity(0.1),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        isLoading
+                            ? SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.red,
+                          ),
+                        )
+                            : const IconifyIcon(
+                          icon: "fluent:delete-32-regular",
+                          size: 20,
+                          color: Colors.red,
+                        ),
+                        SizedBox(width: _isLoading ? 0 : 10),
+                        Text(
+                          _isLoading ? '' : 'Obriši servis',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w600,
+                            color: Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return AlertDialog(
+                            backgroundColor: Colors.white,
+                            title: const Text('Potvrda brisanja'),
+                            content: const Text(
+                                'Jeste li sigurni da želite obrisati ovaj servis? Ova akcija se ne može poništiti.'),
+                            actions: <Widget>[
+                              TextButton(
+                                child: const Text('Otkaži'),
+                                onPressed: () {
+                                  GoRouter.of(context).pop();
+                                },
+                              ),
+                              TextButton(
+                                child: const Text(
+                                  'Obriši',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                                onPressed: () {
+                                  GoRouter.of(context).pop();
+                                  _deleteService();
+                                },
+                              ),
+                            ],
+                          );
+                        },
+                      );
+                    },
+                  ),
                 ),
               ],
             ),
@@ -234,12 +406,12 @@ class ServiceDetailsScreen extends ConsumerWidget {
   }
 
   Column buildServiceDetailColumn(
-    BuildContext context,
-    String detailTitle,
-    String detailValue,
-    String icon, {
-    String suffixText = '',
-  }) {
+      BuildContext context,
+      String detailTitle,
+      String detailValue,
+      String icon, {
+        String suffixText = '',
+      }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -259,7 +431,6 @@ class ServiceDetailsScreen extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 7),
-
         Padding(
           padding: const EdgeInsets.only(left: 3),
           child: Row(
@@ -277,7 +448,6 @@ class ServiceDetailsScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-
               if (suffixText.isNotEmpty) ...[
                 const SizedBox(width: 8),
                 Text(
@@ -292,7 +462,6 @@ class ServiceDetailsScreen extends ConsumerWidget {
             ],
           ),
         ),
-
         const SizedBox(height: 4),
         Divider(color: AppColors.divider),
         const SizedBox(height: 4),

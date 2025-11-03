@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:motus/providers/car_provider.dart';
 import '../models/car_model.dart';
 import '../models/service_car_model.dart';
@@ -55,10 +56,23 @@ class ServicesService {
       return ServiceCar(service: service, car: car);
     }).toList();
 
+    bool hasMore = false;
+    try{
+      final nextPage = await q.startAfterDocument(snapshot.docs.last).get();
+      if(nextPage.docs.isNotEmpty){
+        hasMore = true;
+      } else {
+        hasMore = false;
+      }
+    }
+    catch(e){
+      print(e);
+    }
+
     return PaginationResult(
       items: items,
       lastDocument: snapshot.docs.isNotEmpty ? snapshot.docs.last : null,
-      hasMore: snapshot.docs.length == pageSize,
+      hasMore: hasMore,
     );
   }
 
@@ -92,7 +106,7 @@ class ServicesService {
 
 
   // Service details
-  Future<ServiceCar?> getServiceWithCar(String carId, String serviceId) async {
+  Future<ServiceCar?> getServiceWithCar({required String carId, required String serviceId}) async {
     final doc = await _serviceCollection(carId).doc(serviceId).get();
 
     if (!doc.exists) return null;
@@ -173,16 +187,29 @@ class ServicesService {
   }
 
   Future<void> updateService(
-      String carId,
-      String serviceId,
       ServiceModel service,
       ) async {
-    final ref = _serviceCollection(carId).doc(serviceId);
+    final ref = _serviceCollection(service.carId).doc(service.id);
     await ref.set(service.toMap(), SetOptions(merge: true));
   }
 
-  Future<void> deleteService(String carId, String serviceId) async {
-    final ref = _serviceCollection(carId).doc(serviceId);
-    await ref.delete();
+  Future<void> deleteService({
+    required String carId,
+    required String serviceId,
+  }) async {
+    try {
+      final storageRef = FirebaseStorage.instance
+          .ref()
+          .child('users/$_userId/cars/$carId/services/$serviceId/invoice.jpg');
+
+      await storageRef.delete().catchError((_) {
+        print('Nema slike za brisanje.');
+      });
+
+      await _serviceCollection(carId).doc(serviceId).delete();
+    } catch (e) {
+      print('Greška pri brisanju servisa: $e');
+    }
   }
+
 }

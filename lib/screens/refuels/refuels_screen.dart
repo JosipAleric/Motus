@@ -36,10 +36,10 @@ class _RefuelsScreenState extends ConsumerState<RefuelsScreen> {
           if (cars.isEmpty) {
             return const Padding(
               padding: EdgeInsets.symmetric(horizontal: 15),
-              child: CustomAlert(
+              child: const CustomAlert(
                 type: AlertType.info,
-                title: "Nema vozila",
-                message: "Dodajte vozilo da biste pratili povijest točenja goriva.",
+                title: "Obavijest",
+                message: "Dodajte vozilo kako biste pratili povijest točenja goriva.",
               ),
             );
           }

@@ -23,7 +23,8 @@ class AddRefuelScreen extends ConsumerStatefulWidget {
 class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
   final _formKey = GlobalKey<FormState>();
 
-  final TextEditingController _mileageAtRefuelController = TextEditingController();
+  final TextEditingController _mileageAtRefuelController =
+      TextEditingController();
   final TextEditingController _litersController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _gasStationController = TextEditingController();
@@ -49,9 +50,16 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
     setState(() => _isLoading = true);
 
     try {
-      final num mileageAtRefuel = int.tryParse(_mileageAtRefuelController.text) ?? 0;
+      final num mileageAtRefuel =
+          int.tryParse(_mileageAtRefuelController.text.trim()) ??
+          double.tryParse(
+            _mileageAtRefuelController.text.trim().replaceAll(',', '.'),
+          )?.toInt() ??
+          0;
       final double liters = double.tryParse(_litersController.text) ?? 0;
-      final double price = double.tryParse(_priceController.text) ?? 0;
+      final double price =
+          double.tryParse(_priceController.text.trim().replaceAll(',', '.')) ??
+          0.0;
 
       if (liters <= 0 || price <= 0) {
         throw Exception("Neispravan unos za količinu ili cijenu goriva.");
@@ -77,7 +85,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
       );
 
       final refuelService = ref.read(refuelServiceProvider);
-      await refuelService?.addRefuel(widget.carId, newRefuel);
+      await refuelService?.addRefuel(carId: widget.carId, refuel: newRefuel);
 
       ref.invalidate(refuelStatsProvider(widget.carId));
       ref.invalidate(refuelsPaginatorProvider(widget.carId));
@@ -86,7 +94,10 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
       final currentCar = await carService.getCarById(widget.carId);
 
       if (currentCar != null && mileageAtRefuel > (currentCar.mileage ?? 0)) {
-        await carService.updateCarMileage(widget.carId, mileageAtRefuel.toInt());
+        await carService.updateCarMileage(
+          widget.carId,
+          mileageAtRefuel.toInt(),
+        );
         ref.invalidate(carDetailsProvider(widget.carId));
         ref.invalidate(carsProvider);
       }
@@ -115,7 +126,6 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
       }
     }
   }
-
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(

@@ -41,7 +41,7 @@ class CarDetailsScreen extends ConsumerWidget {
             context,
             type: AlertType.success,
             title: "Uspjeh",
-            message: "Vozilo je uspješno obrisano.",
+            message: "Vozilo je uspješno obrisano iz baze podataka.",
           );
         }
       } catch (e) {
@@ -95,10 +95,10 @@ class CarDetailsScreen extends ConsumerWidget {
           if (car == null) {
             return const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20.0),
-              child: CustomAlert(
+              child: const CustomAlert(
                 type: AlertType.error,
                 title: "Greška",
-                message: "Automobil nije pronađen.",
+                message: "Greška prilikom učitavanja automobila. Pokušajte ponovo kasnije.",
               ),
             );
           }
@@ -219,7 +219,7 @@ class CarDetailsScreen extends ConsumerWidget {
                           if (serviceForCar == null) {
                             return const Padding(
                               padding: EdgeInsets.symmetric(vertical: 5),
-                              child: CustomAlert(
+                              child: const CustomAlert(
                                 type: AlertType.info,
                                 title: 'Obavijest',
                                 message:

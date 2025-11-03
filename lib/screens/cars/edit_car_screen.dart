@@ -48,7 +48,18 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
   final List<String> _fuelTypes = ['Benzin', 'Dizel', 'Električni', 'Hibrid'];
   final List<String> _transmissions = ['Automatski', 'Manualni'];
   final List<String> _driveTypes = ['Prednji pogon', 'Zadnji pogon', '4x4'];
-  final List<String> _vehicleTypes = ['Karavan', 'Sedan', 'SUV', 'Hatchback', 'Kabriolet', 'Pickup', 'Monovolumen', 'Coupe', 'VAN', 'Ostalo'];
+  final List<String> _vehicleTypes = [
+    'Karavan',
+    'Sedan',
+    'SUV',
+    'Hatchback',
+    'Kabriolet',
+    'Pickup',
+    'Monovolumen',
+    'Coupe',
+    'VAN',
+    'Ostalo',
+  ];
 
   Future<void> _pickImage() async {
     final picker = ImagePicker();
@@ -61,8 +72,9 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
   Future<String?> _uploadImage(String carId, String userId) async {
     if (_pickedImage == null) return null;
     try {
-      final storageRef =
-      FirebaseStorage.instance.ref().child('users/$userId/cars/$carId/image.jpg');
+      final storageRef = FirebaseStorage.instance.ref().child(
+        'users/$userId/cars/$carId/image.jpg',
+      );
       await storageRef.putFile(File(_pickedImage!.path));
       return await storageRef.getDownloadURL();
     } catch (e) {
@@ -70,7 +82,8 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
         context,
         type: AlertType.error,
         title: "Greška",
-        message: "Došlo je do greške prilikom slanja slike. Pokušajte ponovo kasnije.",
+        message:
+            "Došlo je do greške prilikom slanja slike. Pokušajte ponovo kasnije.",
       );
       return null;
     }
@@ -83,7 +96,7 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
         context,
         type: AlertType.warning,
         title: "Upozorenje",
-        message: "Molimo odaberite tip goriva i mjenjač.",
+        message: "Molimo odaberite tip goriva i/ili vrstu mjenjača.",
       );
       return;
     }
@@ -105,13 +118,22 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
         fuel_type: _selectedFuelType!,
         transmission: _selectedTransmission!,
         drive_type: _selectedDriveType!,
-        displacement: double.tryParse(_displacementController.text.trim()) ?? 0.0,
+        displacement:
+            double.tryParse(
+              _displacementController.text.trim().replaceAll(',', '.'),
+            ) ??
+            0.0,
         horsepower: int.tryParse(_horsepowerController.text.trim()) ?? 0,
         license_plate: _licensePlateController.text.trim(),
-        mileage: int.tryParse(_mileageController.text.trim()) ?? 0,
+        mileage:
+            int.tryParse(_mileageController.text.trim()) ??
+            double.tryParse(
+              _mileageController.text.trim().replaceAll(',', '.'),
+            )?.toInt() ??
+            0,
         vin: _vinController.text.trim(),
         imageUrl: imageUrl,
-        vehicle_type: _selectedVehicleType!
+        vehicle_type: _selectedVehicleType!,
       );
 
       await carProvider.updateCar(existingCar.id, updatedCar);
@@ -120,7 +142,7 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
         CustomSnackbar.show(
           context,
           type: AlertType.success,
-          title: "Uspjeh",
+          title: "Uspješno",
           message: "Vozilo je uspješno ažurirano.",
         );
         ref.invalidate(carsProvider);
@@ -151,10 +173,18 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
     _mileageController.text = car.mileage.toString();
     _vinController.text = car.vin;
 
-    _fuelTypes.contains(car.fuel_type) ? _selectedFuelType = car.fuel_type : _selectedFuelType = null;
-    _transmissions.contains(car.transmission) ? _selectedTransmission = car.transmission : _selectedTransmission = null;
-    _driveTypes.contains(car.drive_type) ? _selectedDriveType = car.drive_type : _selectedDriveType = null;
-    _vehicleTypes.contains(car.vehicle_type) ? _selectedVehicleType = car.vehicle_type : _selectedVehicleType = null;
+    _fuelTypes.contains(car.fuel_type)
+        ? _selectedFuelType = car.fuel_type
+        : _selectedFuelType = null;
+    _transmissions.contains(car.transmission)
+        ? _selectedTransmission = car.transmission
+        : _selectedTransmission = null;
+    _driveTypes.contains(car.drive_type)
+        ? _selectedDriveType = car.drive_type
+        : _selectedDriveType = null;
+    _vehicleTypes.contains(car.vehicle_type)
+        ? _selectedVehicleType = car.vehicle_type
+        : _selectedVehicleType = null;
 
     _initialized = true;
   }
@@ -271,17 +301,37 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
                         validator: (v) => v!.isEmpty ? 'Obavezno' : null,
                       ),
                       const SizedBox(height: 8),
-                      _buildDropdown('Pogon', 'mingcute:four-wheel-drive-line',
-                          _driveTypes, _selectedDriveType, (val) => setState(() => _selectedDriveType = val)),
+                      _buildDropdown(
+                        'Pogon',
+                        'mingcute:four-wheel-drive-line',
+                        _driveTypes,
+                        _selectedDriveType,
+                        (val) => setState(() => _selectedDriveType = val),
+                      ),
                       const SizedBox(height: 8),
-                      _buildDropdown('Tip goriva', 'hugeicons:fuel-station',
-                          _fuelTypes, _selectedFuelType, (val) => setState(() => _selectedFuelType = val)),
+                      _buildDropdown(
+                        'Tip goriva',
+                        'hugeicons:fuel-station',
+                        _fuelTypes,
+                        _selectedFuelType,
+                        (val) => setState(() => _selectedFuelType = val),
+                      ),
                       const SizedBox(height: 8),
-                      _buildDropdown('Mjenjač', 'fluent:transmission-20-regular',
-                          _transmissions, _selectedTransmission, (val) => setState(() => _selectedTransmission = val)),
+                      _buildDropdown(
+                        'Mjenjač',
+                        'fluent:transmission-20-regular',
+                        _transmissions,
+                        _selectedTransmission,
+                        (val) => setState(() => _selectedTransmission = val),
+                      ),
                       const SizedBox(height: 8),
-                      _buildDropdown('Vrsta vozila', 'fluent:transmission-20-regular',
-                          _vehicleTypes, _selectedVehicleType, (val) => setState(() => _selectedVehicleType = val)),
+                      _buildDropdown(
+                        'Vrsta vozila',
+                        'fluent:transmission-20-regular',
+                        _vehicleTypes,
+                        _selectedVehicleType,
+                        (val) => setState(() => _selectedVehicleType = val),
+                      ),
                       const SizedBox(height: 15),
                       _buildImagePicker(car.imageUrl),
                       const SizedBox(height: 20),
@@ -320,13 +370,13 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
             );
           },
           loading: () =>
-          const Scaffold(body: Center(child: CircularProgressIndicator())),
+              const Scaffold(body: Center(child: CircularProgressIndicator())),
           error: (err, stack) =>
               Scaffold(body: Center(child: Text('Greška: $err'))),
         );
       },
       loading: () =>
-      const Scaffold(body: Center(child: CircularProgressIndicator())),
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (err, stack) =>
           Scaffold(body: Center(child: Text('Greška: $err'))),
     );
@@ -340,11 +390,19 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
         children: [
           Row(
             children: const [
-              IconifyIcon(icon: 'jam:picture-edit', color: Color(0xFF4E4E4E), size: 17),
+              IconifyIcon(
+                icon: 'jam:picture-edit',
+                color: Color(0xFF4E4E4E),
+                size: 17,
+              ),
               SizedBox(width: 4),
               Text(
                 'Slika vozila',
-                style: TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF4E4E4E), fontSize: 16),
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF4E4E4E),
+                  fontSize: 16,
+                ),
               ),
             ],
           ),
@@ -359,24 +417,34 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
             ),
             child: _pickedImage != null
                 ? ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.file(File(_pickedImage!.path), fit: BoxFit.cover),
-            )
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      File(_pickedImage!.path),
+                      fit: BoxFit.cover,
+                    ),
+                  )
                 : existingUrl != null
                 ? ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(existingUrl, fit: BoxFit.cover),
-            )
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.network(existingUrl, fit: BoxFit.cover),
+                  )
                 : const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  IconifyIcon(icon: 'jam:picture-edit', size: 30, color: Colors.grey),
-                  SizedBox(height: 10),
-                  Text('Odaberi sliku vozila', style: TextStyle(color: Colors.grey, fontSize: 14)),
-                ],
-              ),
-            ),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        IconifyIcon(
+                          icon: 'jam:picture-edit',
+                          size: 30,
+                          color: Colors.grey,
+                        ),
+                        SizedBox(height: 10),
+                        Text(
+                          'Odaberi sliku vozila',
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
           ),
         ],
       ),
@@ -384,12 +452,12 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
   }
 
   Widget _buildDropdown(
-      String label,
-      String icon,
-      List<String> items,
-      String? selectedValue,
-      ValueChanged<String?> onChanged,
-      ) {
+    String label,
+    String icon,
+    List<String> items,
+    String? selectedValue,
+    ValueChanged<String?> onChanged,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Column(
@@ -399,8 +467,14 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
             children: [
               IconifyIcon(icon: icon, size: 20),
               const SizedBox(width: 8),
-              Text(label,
-                  style: const TextStyle(fontWeight: FontWeight.w600, color: Color(0xFF4E4E4E), fontSize: 15)),
+              Text(
+                label,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Color(0xFF4E4E4E),
+                  fontSize: 15,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -416,9 +490,13 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
                 value: selectedValue,
                 isExpanded: true,
                 onChanged: onChanged,
-                items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
-                hint: Text('Odaberite ${label.toLowerCase()}',
-                    style: const TextStyle(fontSize: 14, color: Colors.grey)),
+                items: items
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
+                    .toList(),
+                hint: Text(
+                  'Odaberite ${label.toLowerCase()}',
+                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                ),
                 style: const TextStyle(color: Color(0xFF4E4E4E)),
                 dropdownColor: const Color(0xFFF9F9F9),
               ),

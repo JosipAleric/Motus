@@ -27,7 +27,7 @@ class CustomButton extends StatelessWidget {
     this.padding = const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
     this.fontFamily = 'PlusJakartaSans',
     this.fontWeight = FontWeight.w600,
-    this.borderRadius = 10.0,
+    this.borderRadius = 5.0,
     this.iconSize = 20.0,
     this.letterSpacing,
   });

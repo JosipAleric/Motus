@@ -24,6 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _lastNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
 
   bool _loading = false;
 
@@ -80,8 +81,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
         style: TextStyle(fontSize: 14),
         controller: controller,
         obscureText: obscure,
-        textCapitalization:
-            capitalize ? TextCapitalization.words : TextCapitalization.none,
+        textCapitalization: capitalize
+            ? TextCapitalization.words
+            : TextCapitalization.none,
         validator: validator,
         decoration: InputDecoration(
           suffixIcon: Padding(
@@ -166,7 +168,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           child: Container(
                             decoration: const BoxDecoration(
                               color: Colors.white,
-                              borderRadius: BorderRadius.only(
+                              borderRadius: const BorderRadius.only(
                                 topRight: Radius.circular(80),
                               ),
                             ),
@@ -217,6 +219,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     capitalize: false,
                                     validator: (v) =>
                                         v!.isEmpty ? 'Unesite lozinku' : null,
+                                  ),
+                                  buildTextField(
+                                    controller: _confirmPasswordController,
+                                    label: 'Potvrdite lozinku',
+                                    icon: 'solar:lock-password-unlocked-broken',
+                                    obscure: true,
+                                    capitalize: false,
+                                    validator: (v) {
+                                      if (v!.isEmpty) {
+                                        return 'Potvrdite lozinku';
+                                      } else if (v !=
+                                          _passwordController.text) {
+                                        return 'Lozinke se ne podudaraju';
+                                      }
+                                      return null;
+                                    },
                                   ),
                                   Transform.translate(
                                     offset: Offset(0, -15),

@@ -35,7 +35,8 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
   final TextEditingController _serviceNotesController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _mileageController = TextEditingController();
-  final TextEditingController _serviceCenterController = TextEditingController();
+  final TextEditingController _serviceCenterController =
+      TextEditingController();
 
   String? _selectedCarId;
 
@@ -68,9 +69,9 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
   Future<String?> _uploadInvoice(String serviceId, String userId) async {
     if (_pickedInvoice == null || _selectedCarId == null) return null;
     try {
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('users/$userId/cars/$_selectedCarId/services/$serviceId/invoice.jpg');
+      final storageRef = FirebaseStorage.instance.ref().child(
+        'users/$userId/cars/$_selectedCarId/services/$serviceId/invoice.jpg',
+      );
 
       await storageRef.putFile(File(_pickedInvoice!.path));
       return await storageRef.getDownloadURL();
@@ -79,7 +80,8 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
         context,
         type: AlertType.error,
         title: "Greška",
-        message: "Došlo je do greške. Pokušajte ponovo kasnije.",
+        message:
+            "Došlo je do greške prilikom spremanja računa. Pokušajte ponovo kasnije.",
       );
       return null;
     }
@@ -112,8 +114,15 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
       final servicesProvider = ref.read(servicesServiceProvider)!;
       final carProvider = ref.read(carServiceProvider)!;
 
-      final double priceValue = double.tryParse(_priceController.text.trim()) ?? 0.0;
-      final int mileageValue = int.tryParse(_mileageController.text.trim()) ?? 0;
+      final double priceValue =
+          double.tryParse(_priceController.text.trim().replaceAll(',', '.')) ??
+              0.0;
+      final int mileageValue =
+          int.tryParse(_mileageController.text.trim()) ??
+          double.tryParse(
+            _mileageController.text.trim().replaceAll(',', '.'),
+          )?.toInt() ??
+          0;
 
       final tempService = ServiceModel(
         id: '',
@@ -128,7 +137,10 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
       );
 
       if (servicesProvider != null) {
-        final docRef = await servicesProvider.addService(_selectedCarId!, tempService);
+        final docRef = await servicesProvider.addService(
+          _selectedCarId!,
+          tempService,
+        );
 
         String? invoiceUrl;
 
@@ -137,8 +149,11 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
         }
 
         if (invoiceUrl != null) {
-          final updatedService = tempService.copyWith(id: docRef.id, invoiceUrl: invoiceUrl);
-          await servicesProvider.updateService(_selectedCarId!, docRef.id, updatedService);
+          final updatedService = tempService.copyWith(
+            id: docRef.id,
+            invoiceUrl: invoiceUrl,
+          );
+          await servicesProvider.updateService(updatedService);
         }
 
         final currentCar = await carProvider.getCarById(_selectedCarId!);
@@ -153,7 +168,7 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
             context,
             type: AlertType.success,
             title: "Uspješno",
-            message: "Servis je uspješno dodan.",
+            message: "Servis je uspješno zabilježen za odabrano vozilo.",
           );
           ref.invalidate(servicesPaginatorProvider(_selectedCarId!));
           ref.invalidate(latestServicesWithCarProvider);
@@ -166,13 +181,13 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
         context,
         type: AlertType.error,
         title: "Greška",
-        message: "Došlo je do greške prilikom spremanja servisa. Pokušajte ponovo kasnije.",
+        message:
+            "Došlo je do greške prilikom spremanja servisa. Pokušajte ponovo kasnije.",
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
-
 
   @override
   void dispose() {
@@ -193,31 +208,28 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
       data: (currentUser) {
         if (currentUser == null) {
           return const Scaffold(
-            appBar: CustomAppBar(title: 'Greška',),
+            appBar: CustomAppBar(title: 'Greška'),
             body: Center(child: Text('Korisnik nije logiran.')),
           );
         }
 
-        if(carsAsync.asData?.value.isEmpty ?? true) {
+        if (carsAsync.asData?.value.isEmpty ?? true) {
           return Scaffold(
-            appBar: const CustomAppBar(
-              title: 'Dodaj servis',
-            ),
+            appBar: const CustomAppBar(title: 'Dodaj servis'),
             body: const Padding(
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 15),
               child: const CustomAlert(
                 type: AlertType.warning,
                 title: "Nema dostupnih vozila",
-                message: "Greška kod dohvata automobila. Provjerite imate li dodanih automobila ili pokušajte ponovo kasnije.",
+                message:
+                    "Greška kod dohvata automobila. Provjerite imate li dodanih automobila ili pokušajte ponovo kasnije.",
               ),
             ),
           );
         }
 
         return Scaffold(
-          appBar: const CustomAppBar(
-            title: 'Dodaj servis',
-          ),
+          appBar: const CustomAppBar(title: 'Dodaj servis'),
           body: SingleChildScrollView(
             padding: const EdgeInsets.fromLTRB(25, 10, 25, 30),
             child: Form(
@@ -252,8 +264,9 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
                     icon: 'material-symbols:attach-money-rounded',
                     hint: '250.50',
                     suffixText: "BAM",
-                    keyboardType:
-                    const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (v) => v!.isEmpty ? 'Obavezno' : null,
                   ),
 
@@ -282,9 +295,7 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
                     children: [
                       Expanded(
                         child: CustomButton(
-                          onPressed: () => {
-                            GoRouter.of(context).pop()
-                          },
+                          onPressed: () => {GoRouter.of(context).pop()},
                           text: 'Odustani',
                           icon: 'eva:close-circle-outline',
                           padding: const EdgeInsets.symmetric(vertical: 13),
@@ -299,7 +310,7 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
 
                       Expanded(
                         child: CustomButton(
-                          onPressed:  () => _saveService(currentUser),
+                          onPressed: () => _saveService(currentUser),
                           text: 'Spremi',
                           icon: 'proicons:save',
                           isLoading: _isLoading,
@@ -317,7 +328,7 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
         );
       },
       loading: () =>
-      const Scaffold(body: Center(child: CircularProgressIndicator())),
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (err, stack) => Scaffold(
         appBar: AppBar(title: const Text('Greška pri učitavanju')),
         body: Center(child: Text('Došlo je do greške: $err')),
@@ -333,7 +344,11 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
         children: [
           Row(
             children: [
-              const IconifyIcon(icon: 'ion:car-sport-sharp', color: AppColors.textPrimary, size: 20),
+              const IconifyIcon(
+                icon: 'ion:car-sport-sharp',
+                color: AppColors.textPrimary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               const Text(
                 'Odaberite vozilo',
@@ -343,7 +358,10 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
                   fontSize: 15,
                 ),
               ),
-              const Text(' *', style: TextStyle(color: Colors.red, fontSize: 15)),
+              const Text(
+                ' *',
+                style: TextStyle(color: Colors.red, fontSize: 15),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -356,7 +374,10 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
                 decoration: BoxDecoration(
                   color: const Color(0xFFF9F9F9),
                   borderRadius: BorderRadius.circular(10.0),
-                  border: Border.all(color: const Color(0xFFEDEDED), width: 1.0),
+                  border: Border.all(
+                    color: const Color(0xFFEDEDED),
+                    width: 1.0,
+                  ),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 10),
                 child: DropdownButtonHideUnderline(
@@ -371,7 +392,9 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
                     items: cars.map<DropdownMenuItem<String>>((CarModel car) {
                       return DropdownMenuItem<String>(
                         value: car.id,
-                        child: Text('${car.brand} ${car.model} (${car.license_plate})'),
+                        child: Text(
+                          '${car.brand} ${car.model} (${car.license_plate})',
+                        ),
                       );
                     }).toList(),
                     hint: const Text(
@@ -401,9 +424,10 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
           Row(
             children: [
               const IconifyIcon(
-                  icon: 'lets-icons:date-range-light',
-                  color: AppColors.textPrimary,
-                  size: 20),
+                icon: 'lets-icons:date-range-light',
+                color: AppColors.textPrimary,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               const Text(
                 'Datum servisa',
@@ -438,7 +462,9 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
                     : DateFormat('dd.MM.yyyy.').format(_selectedDate!),
                 style: TextStyle(
                   fontSize: 13,
-                  color: _selectedDate == null ? Colors.grey[500] :  AppColors.textPrimary,
+                  color: _selectedDate == null
+                      ? Colors.grey[500]
+                      : AppColors.textPrimary,
                 ),
               ),
             ),
@@ -448,7 +474,6 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
     );
   }
 
-  // Widget za odabir fakture (ostaje isti)
   Widget _buildInvoicePicker() {
     return GestureDetector(
       onTap: _pickInvoice,
@@ -484,29 +509,29 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
             ),
             child: _pickedInvoice == null
                 ? const Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconifyIcon(
-                  icon: 'ri:bill-line',
-                  size: 30,
-                  color: Colors.grey,
-                ),
-                const SizedBox(height: 10),
-                Text(
-                  'Odaberi sliku fakture (opcionalno)',
-                  style: TextStyle(color: Colors.grey, fontSize: 14),
-                ),
-              ],
-            )
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconifyIcon(
+                        icon: 'ri:bill-line',
+                        size: 30,
+                        color: Colors.grey,
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        'Odaberi sliku fakture (opcionalno)',
+                        style: TextStyle(color: Colors.grey, fontSize: 14),
+                      ),
+                    ],
+                  )
                 : ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.file(
-                File(_pickedInvoice!.path),
-                height: 150,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
-            ),
+                    borderRadius: BorderRadius.circular(8),
+                    child: Image.file(
+                      File(_pickedInvoice!.path),
+                      height: 150,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
           ),
         ],
       ),
