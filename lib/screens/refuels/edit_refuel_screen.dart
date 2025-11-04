@@ -57,15 +57,24 @@ class _EditRefuelScreenState extends ConsumerState<EditRefuelScreen> {
       initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            datePickerTheme: DatePickerThemeData(
+              dividerColor: AppColors.divider,
+              backgroundColor: Colors.white,
+            ),
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
-
-    if (picked != null) {
-      setState(() => _selectedDate = picked);
+    if (picked != null && picked != _selectedDate) {
+      _selectedDate = picked;
     }
   }
 
   Future<void> _save(RefuelModel original) async {
-    final currentUser = await ref.read(currentUserFutureProvider.future);
     final carProvider = ref.read(carServiceProvider)!;
     if (!_formKey.currentState!.validate() || _selectedDate == null) {
       CustomSnackbar.show(

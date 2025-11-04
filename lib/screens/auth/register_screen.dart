@@ -89,7 +89,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           suffixIcon: Padding(
             padding: const EdgeInsets.only(right: 10),
             child: Container(
-              margin: EdgeInsets.all(8),
+              margin: const EdgeInsets.all(8),
               child: IconifyIcon(
                 icon: icon,
                 size: 10,
@@ -97,7 +97,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
           ),
-          contentPadding: EdgeInsets.symmetric(vertical: 17, horizontal: 10),
+          contentPadding: const EdgeInsets.symmetric(vertical: 17, horizontal: 10),
           labelText: label,
           labelStyle: TextStyle(
             fontSize: 14,
@@ -268,7 +268,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                             fontWeight: FontWeight.w800,
                                             iconSize: 25,
                                             letterSpacing: 4,
-                                            padding: EdgeInsets.symmetric(
+                                            padding: const EdgeInsets.symmetric(
                                               vertical: 15,
                                             ),
                                             isLoading: _loading,
@@ -288,10 +288,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         Container(
                           width: double.infinity,
                           alignment: Alignment.center,
-                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
                           decoration: BoxDecoration(color: Colors.white),
                           child: Padding(
-                            padding: EdgeInsets.only(bottom: 25),
+                            padding: const EdgeInsets.only(bottom: 25),
                             child: Text(
                               '${DateTime.now().year} Motus - Copyright ©',
                               style: TextStyle(

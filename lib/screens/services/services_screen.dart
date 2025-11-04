@@ -122,8 +122,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
                   final car = serviceCar.car;
 
                   return CustomServiceCard(
-                      carModel: car.model,
-                      carBrand: car.brand,
+                      car: car,
                       date: service.date,
                       description: service.type,
                       price: '${service.price.toStringAsFixed(2)}',

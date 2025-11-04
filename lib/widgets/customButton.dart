@@ -15,6 +15,7 @@ class CustomButton extends StatelessWidget {
   final double borderRadius;
   final double iconSize;
   final double? letterSpacing;
+  final Color? color;
 
   const CustomButton({
     super.key,
@@ -30,6 +31,7 @@ class CustomButton extends StatelessWidget {
     this.borderRadius = 5.0,
     this.iconSize = 20.0,
     this.letterSpacing,
+    this.color = AppColors.primary,
   });
 
   @override
@@ -37,8 +39,8 @@ class CustomButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
-        disabledBackgroundColor: outlined ? Colors.transparent : AppColors.primary,
-        backgroundColor: outlined ? Colors.white : AppColors.primary,
+        disabledBackgroundColor: outlined ? Colors.transparent : (color ?? AppColors.primary).withOpacity(0.6),
+        backgroundColor: outlined ? Colors.white : (color ?? AppColors.primary),
         foregroundColor: outlined ? AppColors.primary : Colors.white,
         elevation: outlined ? 0 : null,
         padding: padding,

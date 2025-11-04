@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:iconify_design/iconify_design.dart';
+import '../models/car_model.dart';
 import '../theme/app_theme.dart';
 
 class CustomServiceCard extends StatelessWidget {
-  final String carModel;
-  final String carBrand;
+  final CarModel car;
   final DateTime date;
   final String description;
   final String price;
@@ -12,8 +12,7 @@ class CustomServiceCard extends StatelessWidget {
 
   const CustomServiceCard({
     Key? key,
-    required this.carModel,
-    required this.carBrand,
+    required this.car,
     required this.date,
     required this.description,
     required this.price,
@@ -40,7 +39,7 @@ class CustomServiceCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        carBrand,
+                        car.brand,
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w400,
@@ -49,14 +48,27 @@ class CustomServiceCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 1),
-                      Text(
-                        carModel,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                          letterSpacing: 1.2
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            car.year.toString(),
+                            style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                                color: AppColors.textPrimary,
+                                letterSpacing: 1.2
+                            ),
+                          ),
+                          Text(
+                            " " + car.model,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                              letterSpacing: 1.2
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),

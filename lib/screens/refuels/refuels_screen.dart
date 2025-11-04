@@ -35,7 +35,7 @@ class _RefuelsScreenState extends ConsumerState<RefuelsScreen> {
         data: (cars) {
           if (cars.isEmpty) {
             return const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 15),
+              padding: const EdgeInsets.symmetric(horizontal: 15),
               child: const CustomAlert(
                 type: AlertType.info,
                 title: "Obavijest",

@@ -60,11 +60,20 @@ class _EditServiceScreenState extends ConsumerState<EditServiceScreen> {
       initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime.now(),
+      builder: (BuildContext context, Widget? child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            datePickerTheme: DatePickerThemeData(
+              dividerColor: AppColors.divider,
+              backgroundColor: Colors.white,
+            ),
+          ),
+          child: child ?? const SizedBox.shrink(),
+        );
+      },
     );
     if (picked != null && picked != _selectedDate) {
-      setState(() {
-        _selectedDate = picked;
-      });
+      _selectedDate = picked;
     }
   }
 
@@ -131,6 +140,7 @@ class _EditServiceScreenState extends ConsumerState<EditServiceScreen> {
         ) ??
         0.0;
 
+    print("Selected date for update: $_selectedDate");
     final updatedService = ServiceModel(
       id: widget.serviceId,
       carId: _selectedCarId!,
@@ -142,6 +152,8 @@ class _EditServiceScreenState extends ConsumerState<EditServiceScreen> {
       date: _selectedDate!,
       invoiceUrl: invoiceUrl,
     );
+
+    print("Updated Service: ${updatedService.toMap()}");
 
     final currentCar = await carProvider.getCarById(_selectedCarId!);
     if (currentCar != null && mileageValue > currentCar.mileage) {
@@ -254,7 +266,9 @@ class _EditServiceScreenState extends ConsumerState<EditServiceScreen> {
                     hint: 'AC Star, Euro servis...',
                     validator: (v) => v!.isEmpty ? 'Obavezno' : null,
                   ),
+
                   _buildDatePicker(),
+
                   CustomTextField(
                     controller: _priceController,
                     label: 'Cijena servisa',

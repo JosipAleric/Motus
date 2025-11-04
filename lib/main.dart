@@ -8,6 +8,7 @@ import 'package:motus/screens/cars/car_details_screen.dart';
 import 'package:motus/screens/cars/edit_car_screen.dart';
 import 'package:motus/screens/home_screen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:motus/screens/profile/profile_details_screen.dart';
 import 'package:motus/screens/refuels/add_refuel_screen.dart';
 import 'package:motus/screens/refuels/edit_refuel_screen.dart';
 import 'package:motus/screens/refuels/refuel_details_screen.dart';
@@ -153,7 +154,7 @@ final _router = GoRouter(
         GoRoute(
           path: '/profile',
           name: 'profile',
-          builder: (_, __) => const HomeScreen(),
+          builder: (_, __) => const ProfileDetailsScreen(),
         ),
         GoRoute(
           path: '/add_service',

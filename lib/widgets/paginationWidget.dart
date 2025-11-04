@@ -26,7 +26,7 @@ class PaginationWidget<T> extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (state.isLoading) {
       return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 25),
+        padding: const EdgeInsets.symmetric(vertical: 25),
         child: Center(child: CircularProgressIndicator()),
       );
     }
@@ -107,7 +107,7 @@ class PaginationWidget<T> extends ConsumerWidget {
         decoration: BoxDecoration(
           color: disabled ? Colors.grey.shade100 : Colors.grey.shade200,
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.grey.shade300),
+          border: Border.all(color: disabled ? Colors.grey.shade200 : Colors.grey.shade300),
         ),
         child: Text(
           label,

@@ -82,7 +82,7 @@ class _LoginScreenState extends State<LoginScreen> {
         decoration: _inputDecoration(
           label: 'Email',
           suffixIcon: const Padding(
-            padding: EdgeInsets.only(right: 15, left: 10),
+            padding: const EdgeInsets.only(right: 15, left: 10),
             child: IconifyIcon(
               icon: 'mdi-light:email',
               size: 23,
@@ -104,7 +104,7 @@ class _LoginScreenState extends State<LoginScreen> {
         decoration: _inputDecoration(
           label: 'Lozinka',
           suffixIcon: const Padding(
-            padding: EdgeInsets.only(right: 15, left: 10),
+            padding: const EdgeInsets.only(right: 15, left: 10),
             child: IconifyIcon(
               icon: 'solar:lock-password-unlocked-broken',
               size: 22,
@@ -274,7 +274,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                       ),
                                       Padding(
-                                        padding: EdgeInsets.symmetric(
+                                        padding: const EdgeInsets.symmetric(
                                           horizontal: 20.0,
                                         ),
                                         child: Text(

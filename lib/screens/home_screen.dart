@@ -55,7 +55,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
         data: (user) {
           if (user == null) {
             return const Padding(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               child: const CustomAlert(
                 type: AlertType.info,
                 title: "Greška",
@@ -150,7 +150,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                             data: (serviceWithCar) {
                               if (serviceWithCar.isEmpty) {
                                 return const Padding(
-                                  padding: EdgeInsets.symmetric(vertical: 5),
+                                  padding: const EdgeInsets.symmetric(vertical: 5),
                                   child: const CustomAlert(
                                     type: AlertType.info,
                                     title: 'Obavijest',
@@ -168,8 +168,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                                   return Padding(
                                     padding: const EdgeInsets.only(bottom: 15),
                                     child: CustomServiceCard(
-                                      carBrand: car.brand,
-                                      carModel: car.model,
+                                      car: car,
                                       description: service.type,
                                       date: service.date,
                                       price: service.price.toString(),
@@ -196,7 +195,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen>
                     }
                   },
                   loading: () => const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 40),
+                    padding: const EdgeInsets.symmetric(vertical: 40),
                     child: Center(child: CircularProgressIndicator()),
                   ),
                   error: (e, _) => Padding(

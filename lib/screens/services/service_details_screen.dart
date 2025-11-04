@@ -112,7 +112,7 @@ class ServiceDetailsScreen extends ConsumerWidget {
         data: (data) {
           if (data == null) {
             return const Padding(
-              padding: EdgeInsets.all(20),
+              padding: const EdgeInsets.all(20),
               child: CustomAlert(
                 type: AlertType.error,
                 title: "Greška",

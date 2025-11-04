@@ -5,20 +5,22 @@ class CustomTextField extends StatelessWidget {
   final TextEditingController controller;
   final String label;
   final String icon;
-  final String hint;
+  final String? hint;
   final TextInputType keyboardType;
   final String? suffixText;
   final String? Function(String?)? validator;
+  final bool disabled;  // new optional property
 
   const CustomTextField({
     Key? key,
     required this.controller,
     required this.label,
     required this.icon,
-    required this.hint,
+    this.hint,
     this.keyboardType = TextInputType.text,
     this.suffixText,
     this.validator,
+    this.disabled = false,  // default to false
   }) : super(key: key);
 
   @override
@@ -47,9 +49,9 @@ class CustomTextField extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 8),
-
           TextFormField(
             controller: controller,
+            enabled: !disabled,
             textCapitalization: TextCapitalization.sentences,
             decoration: InputDecoration(
               suffixIcon: suffixText != null && suffixText!.isNotEmpty
@@ -79,6 +81,13 @@ class CustomTextField extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10.0),
                 borderSide: const BorderSide(
                   color: Color(0xFFEDEDED),
+                  width: 1.0,
+                ),
+              ),
+              disabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(10.0),
+                borderSide: const BorderSide(
+                  color: Color(0xFFEEEEEE),
                   width: 1.0,
                 ),
               ),

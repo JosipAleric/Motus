@@ -94,7 +94,7 @@ class CarDetailsScreen extends ConsumerWidget {
         data: (car) {
           if (car == null) {
             return const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20.0),
+              padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: const CustomAlert(
                 type: AlertType.error,
                 title: "Greška",
@@ -218,7 +218,7 @@ class CarDetailsScreen extends ConsumerWidget {
                         data: (serviceForCar) {
                           if (serviceForCar == null) {
                             return const Padding(
-                              padding: EdgeInsets.symmetric(vertical: 5),
+                              padding: const EdgeInsets.symmetric(vertical: 5),
                               child: const CustomAlert(
                                 type: AlertType.info,
                                 title: 'Obavijest',
@@ -232,8 +232,7 @@ class CarDetailsScreen extends ConsumerWidget {
                           final car = serviceForCar['car'];
 
                           return CustomServiceCard(
-                            carModel: car.model,
-                            carBrand: car.brand,
+                            car: car,
                             date: service.date,
                             description: service.type,
                             price: "${service.price.toStringAsFixed(0)}",
