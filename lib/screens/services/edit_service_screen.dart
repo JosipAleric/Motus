@@ -6,8 +6,9 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:iconify_design/iconify_design.dart';
 import 'package:intl/intl.dart';
+import 'package:motus/utils/currency_formatter.dart';
 import '../../models/service_model.dart';
-import '../../models/user_model.dart';
+import '../../providers/currency_provider.dart';
 import '../../providers/service/service_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/car_provider.dart';
@@ -101,6 +102,8 @@ class _EditServiceScreenState extends ConsumerState<EditServiceScreen> {
   Future<void> _updateService(ServiceModel service) async {
     final currentUser = await ref.read(currentUserFutureProvider.future);
     final carProvider = ref.read(carServiceProvider)!;
+    final preferedCurrency = ref.read(currencyStreamProvider).asData?.value;
+    final currencyProvider = ref.read(currencyServiceProvider);
 
     if (currentUser == null) {
       CustomSnackbar.show(
@@ -140,20 +143,19 @@ class _EditServiceScreenState extends ConsumerState<EditServiceScreen> {
         ) ??
         0.0;
 
-    print("Selected date for update: $_selectedDate");
+    final formattedPrice = currencyProvider.toEur(priceValue, preferedCurrency.toString());
+
     final updatedService = ServiceModel(
       id: widget.serviceId,
       carId: _selectedCarId!,
       type: _serviceTypeController.text.trim(),
       service_notes: _serviceNotesController.text.trim(),
-      price: priceValue,
+      price: formattedPrice,
       mileage_at_service: mileageValue,
       service_center: _serviceCenterController.text.trim(),
       date: _selectedDate!,
       invoiceUrl: invoiceUrl,
     );
-
-    print("Updated Service: ${updatedService.toMap()}");
 
     final currentCar = await carProvider.getCarById(_selectedCarId!);
     if (currentCar != null && mileageValue > currentCar.mileage) {
@@ -192,7 +194,7 @@ class _EditServiceScreenState extends ConsumerState<EditServiceScreen> {
   void _populateFields(ServiceModel service) {
     _serviceTypeController.text = service.type;
     _serviceNotesController.text = service.service_notes;
-    _priceController.text = service.price.toString();
+    _priceController.text = formatPrice(service.price, ref)["amount"]!;
     _mileageController.text = service.mileage_at_service.toString();
     _serviceCenterController.text = service.service_center;
     _selectedDate = service.date;
@@ -214,6 +216,7 @@ class _EditServiceScreenState extends ConsumerState<EditServiceScreen> {
     final serviceAsync = ref.watch(
       serviceDetailsWithCarProvider((carId: widget.carId, serviceId: widget.serviceId)),
     );
+    final selectedCurrency = ref.watch(currencyStreamProvider).value?.toUpperCase();
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -234,7 +237,7 @@ class _EditServiceScreenState extends ConsumerState<EditServiceScreen> {
         data: (data) {
           if (data == null) {
             return const Padding(
-              padding: EdgeInsets.all(20),
+              padding: EdgeInsets.symmetric(vertical: 20),
               child: CustomAlert(
                 type: AlertType.error,
                 title: "Greška",
@@ -246,7 +249,7 @@ class _EditServiceScreenState extends ConsumerState<EditServiceScreen> {
           _populateFields(data.service);
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(25, 10, 25, 30),
+            padding: const EdgeInsets.fromLTRB(0, 10, 0, 30),
             child: Form(
               key: _formKey,
               child: Column(
@@ -274,7 +277,7 @@ class _EditServiceScreenState extends ConsumerState<EditServiceScreen> {
                     label: 'Cijena servisa',
                     icon: 'material-symbols:attach-money-rounded',
                     hint: '250.50',
-                    suffixText: "BAM",
+                    suffixText: selectedCurrency.toString(),
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),

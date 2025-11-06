@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconify_design/iconify_design.dart';
+import 'package:motus/widgets/currencyText.dart';
 import '../models/car_model.dart';
 import '../theme/app_theme.dart';
 
@@ -101,7 +102,7 @@ class CustomServiceCard extends StatelessWidget {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _infoChip(icon: "solar:tag-price-bold", label: price + " BAM"),
+                  _infoChip(icon: "solar:tag-price-bold", label: price),
                 ],
               ),
             ],
@@ -161,10 +162,16 @@ class CustomServiceCard extends StatelessWidget {
           child: IconifyIcon(icon: icon, size: 17, color: Colors.black),
         ),
         const SizedBox(width: 6),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textPrimary, letterSpacing: 1.3),
-        ),
+        CurrencyText(
+          double.parse(label),
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w500,
+            color: AppColors.textPrimary,
+            letterSpacing: 1.3,
+          ),
+        )
+
       ],
     );
   }

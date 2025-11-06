@@ -10,6 +10,7 @@ import '../../models/refuel_model.dart';
 import '../../providers/car_provider.dart';
 import '../../providers/refuel/refuel_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/currency_formatter.dart';
 import '../../widgets/customAlert.dart';
 
 import '../../widgets/customAppBar.dart';
@@ -35,7 +36,7 @@ class _RefuelsScreenState extends ConsumerState<RefuelsScreen> {
         data: (cars) {
           if (cars.isEmpty) {
             return const Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15),
+              padding: const EdgeInsets.symmetric(vertical: 20),
               child: const CustomAlert(
                 type: AlertType.info,
                 title: "Obavijest",
@@ -62,7 +63,7 @@ class _RefuelsScreenState extends ConsumerState<RefuelsScreen> {
                 }
               },
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Column(
                   children: [
                     Row(
@@ -166,8 +167,7 @@ class RefuelsContent extends ConsumerWidget {
                       child: _infoChip(
                         icon: 'hugeicons:chart-average',
                         label: "Po točenju",
-                        text:
-                        '${stats.averageCostPerRefuel.toStringAsFixed(2)} BAM',
+                        text: '${formatPrice(stats.averageCostPerRefuel, ref)["amount"]!} ${formatPrice(stats.averageCostPerRefuel, ref)["currency"]!}',
                       ),
                     ),
                   ],
@@ -188,7 +188,7 @@ class RefuelsContent extends ConsumerWidget {
                       child: _infoChip(
                         icon: 'hugeicons:summation-02',
                         label: "Trošak",
-                        text: '${stats.totalCost.toStringAsFixed(2)} BAM',
+                        text: '${formatPrice(stats.totalCost, ref)["amount"]!} ${formatPrice(stats.totalCost, ref)["currency"]!}',
                       ),
                     ),
                   ],

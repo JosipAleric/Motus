@@ -28,28 +28,44 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
     Widget actionWidget;
 
     if (GoRouter.of(context).canPop()) {
-      leadingWidget = IconButton(
-        icon: IconifyIcon(icon: 'solar:arrow-left-broken', color: Color(0xFF000000), size: 27),
-        onPressed: () {
+      // Use GestureDetector instead of IconButton to eliminate built-in padding
+      leadingWidget = GestureDetector(
+        onTap: () {
           GoRouter.of(context).pop();
         },
+        // Wrap the icon in Padding.zero if you want a tiny buffer, or remove Padding entirely.
+        child: Padding(
+          padding: EdgeInsets.zero,
+          child: IconifyIcon(icon: 'solar:arrow-left-broken', color: Color(0xFF000000), size: 20),
+        ),
       );
     } else {
-      leadingWidget = IconButton(
-        icon: IconifyIcon(icon: 'gg:menu-left', color: Color(0xFF4E4E4E), size: 27),
-        onPressed: openDrawer != null ? () => openDrawer() : null,
+      leadingWidget = GestureDetector(
+        onTap: openDrawer != null ? () => openDrawer() : null,
+        child: Padding(
+          padding: EdgeInsets.zero,
+          child: IconifyIcon(icon: 'gg:menu-left', color: Color(0xFF4E4E4E), size: 20),
+        ),
       );
     }
 
+// --- Action Widget Modification ---
     if (showAddCarButton) {
-      actionWidget = IconButton(
-        icon: IconifyIcon(icon: 'fa7-solid:plus', color: Color(0xFF4E4E4E), size: 18),
-        onPressed: () => GoRouter.of(context).go('/add_car'),
+      // Use GestureDetector instead of IconButton to eliminate built-in padding
+      actionWidget = GestureDetector(
+        onTap: () => GoRouter.of(context).go('/add_car'),
+        child: Padding(
+          padding: EdgeInsets.zero,
+          child: IconifyIcon(icon: 'fa7-solid:plus', color: Color(0xFF4E4E4E), size: 18),
+        ),
       );
     } else {
-      actionWidget = IconButton(
-        icon: IconifyIcon(icon: 'heroicons-outline:cog', color: Color(0xFF4E4E4E), size: 25),
-        onPressed: () => print('Idi na Postavke'),
+      actionWidget = GestureDetector(
+        onTap: () => {GoRouter.of(context).pushNamed('settings')},
+        child: Padding(
+          padding: EdgeInsets.zero,
+          child: IconifyIcon(icon: 'heroicons-outline:cog', color: Color(0xFF4E4E4E), size: 25),
+        ),
       );
     }
 
@@ -59,7 +75,9 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
         backgroundColor: Colors.white,
         elevation: 0,
         leading: leadingWidget,
+        leadingWidth: 27,
         scrolledUnderElevation: 0,
+        actionsPadding: const EdgeInsets.all(0),
         title: Column(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
@@ -88,7 +106,7 @@ class CustomAppBar extends ConsumerWidget implements PreferredSizeWidget {
           ],
         ),
         centerTitle: true,
-        actions: [actionWidget, const SizedBox(width: 8)],
+        actions: [actionWidget],
       ),
     );
   }

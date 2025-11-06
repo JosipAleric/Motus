@@ -39,7 +39,7 @@ class CustomButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: isLoading ? null : onPressed,
       style: ElevatedButton.styleFrom(
-        disabledBackgroundColor: outlined ? Colors.transparent : (color ?? AppColors.primary).withOpacity(0.6),
+        disabledBackgroundColor: outlined ? Colors.transparent : (color ?? AppColors.primary),
         backgroundColor: outlined ? Colors.white : (color ?? AppColors.primary),
         foregroundColor: outlined ? AppColors.primary : Colors.white,
         elevation: outlined ? 0 : null,

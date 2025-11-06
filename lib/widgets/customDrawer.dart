@@ -37,27 +37,27 @@ class _DrawerItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final Color itemColor = isLogout ? const Color(0xFFF22727) : AppColors.textPrimary;
-    final Color backgroundColor = isLogout ? const Color(0x0bf22727) : AppColors.surfaceCard;
-    final Color leadingIconBgColor = isLogout ? const Color(0x0bf22727) : Colors.white;
+    final Color backgroundColor = Colors.white;
+    final Color leadingIconBgColor = isLogout ? const Color(0x0bf22727) : AppColors.surfaceCard;
 
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: borderRadius,
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 10),
       child: ListTile(
         contentPadding: EdgeInsets.zero,
         leading: Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(15),
           decoration: BoxDecoration(
             color: leadingIconBgColor,
             borderRadius: BorderRadius.circular(15),
           ),
           child: IconifyIcon(
             icon: icon,
-            size: _kIconSize,
+            size: 18,
             color: isLogout ? itemColor : const Color(0xFF404040),
           ),
         ),
@@ -67,7 +67,7 @@ class _DrawerItem extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: itemColor,
                 letterSpacing: 1.2,
@@ -125,8 +125,14 @@ class CustomDrawer extends StatelessWidget {
                   ),
                   _DrawerItem(
                     icon: "streamline-ultimate:trip-road",
-                    label: "Gorivo",
+                    label: "Trip Log",
                     route: "/fuel",
+                    borderRadius: borderRadius,
+                  ),
+                  _DrawerItem(
+                    icon: "heroicons-outline:cog",
+                    label: "Postavke",
+                    route: "/settings",
                     borderRadius: borderRadius,
                   ),
                   const Divider(color: AppColors.divider),

@@ -94,7 +94,7 @@ class CarDetailsScreen extends ConsumerWidget {
         data: (car) {
           if (car == null) {
             return const Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+              padding: const EdgeInsets.symmetric(vertical: 20.0),
               child: const CustomAlert(
                 type: AlertType.error,
                 title: "Greška",
@@ -108,8 +108,6 @@ class CarDetailsScreen extends ConsumerWidget {
               SingleChildScrollView(
                 padding: const EdgeInsets.only(
                   top: 0.0,
-                  left: 20.0,
-                  right: 20.0,
                   bottom: 40.0,
                 ),
                 child: Center(

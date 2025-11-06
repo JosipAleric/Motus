@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:iconify_design/iconify_design.dart';
+import 'package:motus/widgets/currencyText.dart';
 import '../theme/app_theme.dart';
 
 class CustomRefuelCard extends StatelessWidget {
@@ -76,7 +77,7 @@ class CustomRefuelCard extends StatelessWidget {
 
               const SizedBox(height: 8),
 
-               Text(
+              Text(
                 "Natočeno gorivo u vozilo ${carBrand} ${carModel}.",
                 style: const TextStyle(
                     color: Color(0xFF2B2B2B),
@@ -89,10 +90,10 @@ class CustomRefuelCard extends StatelessWidget {
 
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                spacing: 10,
                 children: [
-                  _infoChip(icon: "solar:tag-price-bold", label: price.toString() + " BAM"),
-                  _infoChip(icon: "material-symbols-light:local-gas-station-rounded", label: liters.toString() + " L"),
+                  _infoChip(icon: "solar:tag-price-bold", label: price.toString(), isPrice: true),
+                  const SizedBox(width: 10),
+                  _infoChip(icon: "material-symbols-light:local-gas-station-rounded", label: liters.toString() + " L", isPrice: false),
                 ],
               ),
             ],
@@ -116,13 +117,13 @@ class CustomRefuelCard extends StatelessWidget {
               const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               child: Row(
                 children: const [
-                  const IconifyIcon(
+                  IconifyIcon(
                     icon: 'solar:arrow-right-broken',
                     color: Colors.white,
                     size: 16,
                   ),
-                  const SizedBox(width: 6),
-                  const Text(
+                  SizedBox(width: 6),
+                  Text(
                     "Detalji",
                     style: TextStyle(
                         color: Colors.white,
@@ -140,8 +141,9 @@ class CustomRefuelCard extends StatelessWidget {
     );
   }
 
-  Widget _infoChip({required String icon, required String label}) {
+  Widget _infoChip({required String icon, required String label, required bool isPrice}) {
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
@@ -152,10 +154,22 @@ class CustomRefuelCard extends StatelessWidget {
           child: IconifyIcon(icon: icon, size: 17, color: Colors.black),
         ),
         const SizedBox(width: 6),
-        Text(
-          label,
-          style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: AppColors.textPrimary, letterSpacing: 1.3),
-        ),
+
+        if (isPrice)
+          CurrencyText(
+            double.parse(label),
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: AppColors.textPrimary,
+              letterSpacing: 1.3,
+            ),
+          )
+        else
+          Text(
+            label,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w500, color: AppColors.textPrimary, letterSpacing: 1.3),
+          ),
       ],
     );
   }

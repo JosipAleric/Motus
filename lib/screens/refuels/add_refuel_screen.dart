@@ -7,10 +7,12 @@ import '../../models/refuel_model.dart';
 import '../../providers/car_provider.dart';
 import '../../providers/refuel/refuel_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/currency_provider.dart';
 import '../../widgets/customAlert.dart';
 import '../../widgets/customButton.dart';
 import '../../widgets/customSnackbar.dart';
 import '../../widgets/customTextField.dart';
+import '../../utils/currency_formatter.dart';
 
 class AddRefuelScreen extends ConsumerStatefulWidget {
   final String carId;
@@ -24,7 +26,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
   final _formKey = GlobalKey<FormState>();
 
   final TextEditingController _mileageAtRefuelController =
-      TextEditingController();
+  TextEditingController();
   final TextEditingController _litersController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   final TextEditingController _gasStationController = TextEditingController();
@@ -50,22 +52,34 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
     setState(() => _isLoading = true);
 
     try {
+      final carService = ref.read(carServiceProvider)!;
+      final refuelService = ref.read(refuelServiceProvider);
+      final preferedCurrency = ref.read(currencyStreamProvider).asData?.value;
+      final currencyProvider = ref.read(currencyServiceProvider);
+
+      // Parsiranje unosa
       final num mileageAtRefuel =
           int.tryParse(_mileageAtRefuelController.text.trim()) ??
-          double.tryParse(
-            _mileageAtRefuelController.text.trim().replaceAll(',', '.'),
-          )?.toInt() ??
-          0;
-      final double liters = double.tryParse(_litersController.text) ?? 0;
-      final double price =
-          double.tryParse(_priceController.text.trim().replaceAll(',', '.')) ??
-          0.0;
+              double.tryParse(
+                _mileageAtRefuelController.text.trim().replaceAll(',', '.'),
+              )?.toInt() ??
+              0;
 
-      if (liters <= 0 || price <= 0) {
+      final double liters =
+          double.tryParse(_litersController.text.trim().replaceAll(',', '.')) ??
+              0.0;
+      final double inputPrice =
+          double.tryParse(_priceController.text.trim().replaceAll(',', '.')) ??
+              0.0;
+
+      if (liters <= 0 || inputPrice <= 0) {
         throw Exception("Neispravan unos za količinu ili cijenu goriva.");
       }
 
-      final double pricePerLiter = price / liters;
+      // Pretvaranje u EUR ako je potrebno
+      final double priceInEur =
+      currencyProvider.toEur(inputPrice, preferedCurrency.toString());
+      final double pricePerLiter = priceInEur / liters;
 
       final newRefuel = RefuelModel(
         id: '',
@@ -73,7 +87,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
         mileageAtRefuel: mileageAtRefuel,
         liters: liters,
         pricePerLiter: pricePerLiter,
-        price: price,
+        price: priceInEur,
         usedFuelAditives: _usedFuelAditives,
         gasStation: _gasStationController.text.trim().isEmpty
             ? null
@@ -84,15 +98,12 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
         carId: widget.carId,
       );
 
-      final refuelService = ref.read(refuelServiceProvider);
       await refuelService?.addRefuel(carId: widget.carId, refuel: newRefuel);
 
       ref.invalidate(refuelStatsProvider(widget.carId));
       ref.invalidate(refuelsPaginatorProvider(widget.carId));
 
-      final carService = ref.read(carServiceProvider)!;
       final currentCar = await carService.getCarById(widget.carId);
-
       if (currentCar != null && mileageAtRefuel > (currentCar.mileage ?? 0)) {
         await carService.updateCarMileage(
           widget.carId,
@@ -107,7 +118,8 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
           context,
           type: AlertType.success,
           title: "Uspješno",
-          message: "Podaci o točenju goriva su uspješno dodani.",
+          message:
+          "Podaci o točenju goriva su uspješno dodani.",
         );
         GoRouter.of(context).pop();
       }
@@ -190,13 +202,15 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final preferedCurrency = ref.watch(currencyStreamProvider).asData?.value ?? "eur";
+
     return Scaffold(
       appBar: const CustomAppBar(
         title: 'Dodaj točenje goriva',
         showAddCarButton: false,
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(25, 10, 25, 30),
+        padding: const EdgeInsets.fromLTRB(0, 10, 0, 30),
         child: Form(
           key: _formKey,
           child: Column(
@@ -217,7 +231,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
               CustomTextField(
                 controller: _litersController,
                 label: 'Količina goriva (L)',
-                icon: 'hugeicons:gas-station',
+                icon: 'icon-park-outline:petrol',
                 hint: '45.50',
                 suffixText: "L",
                 keyboardType: TextInputType.number,
@@ -229,7 +243,7 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
                 label: 'Ukupna cijena',
                 icon: 'ri:money-euro-box-line',
                 hint: '105.55',
-                suffixText: "KM",
+                suffixText: preferedCurrency.toUpperCase(),
                 keyboardType: TextInputType.number,
                 validator: (v) => v!.isEmpty ? 'Obavezno' : null,
               ),
@@ -244,13 +258,12 @@ class _AddRefuelScreenState extends ConsumerState<AddRefuelScreen> {
               CustomTextField(
                 controller: _notesController,
                 label: 'Napomene (opcionalno)',
-                icon: 'ion:ios-document-text-outline',
+                icon: 'hugeicons:note',
                 hint: 'Put u Njemačku',
               ),
 
               const SizedBox(height: 15),
 
-              // Checkbox za aditive
               Row(
                 children: [
                   Checkbox(

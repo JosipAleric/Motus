@@ -231,7 +231,7 @@ class _EditCarScreenState extends ConsumerState<EditCarScreen> {
                 showAddCarButton: false,
               ),
               body: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(25, 10, 25, 30),
+                padding: const EdgeInsets.fromLTRB(0, 10, 0, 30),
                 child: Form(
                   key: _formKey,
                   child: Column(

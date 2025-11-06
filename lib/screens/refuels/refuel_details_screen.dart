@@ -5,6 +5,7 @@ import 'package:iconify_design/iconify_design.dart';
 import 'package:intl/intl.dart';
 import '../../providers/refuel/refuel_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/currency_formatter.dart';
 import '../../widgets/customAlert.dart';
 import '../../widgets/customAppBar.dart';
 import '../../widgets/customButton.dart';
@@ -94,7 +95,7 @@ class RefuelDetailsScreen extends ConsumerWidget {
         data: (data) {
           if (data == null) {
             return const Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(vertical: 20),
               child: CustomAlert(
                 type: AlertType.error,
                 title: "Greška",
@@ -107,7 +108,7 @@ class RefuelDetailsScreen extends ConsumerWidget {
           final car = data.car;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(vertical: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -186,13 +187,13 @@ class RefuelDetailsScreen extends ConsumerWidget {
                 ),
                 buildRefuelDetailColumn(
                   "Cijena po litru",
-                  "${formatNumber(refuel.pricePerLiter)} BAM",
+                  formatPrice(refuel.pricePerLiter, ref)["amount"]! + " " + formatPrice(refuel.pricePerLiter, ref)["currency"]!,
                   'material-symbols:attach-money-rounded',
                 ),
                 buildRefuelDetailColumn(
-                  "Ukupna cijena",
-                  "${formatNumber(refuel.price)} BAM",
-                  'mdi:cash',
+                  "Cijena",
+                  formatPrice(refuel.price, ref)["amount"]! + " " + formatPrice(refuel.price, ref)["currency"]!,
+                  'material-symbols:attach-money-rounded',
                 ),
                 buildRefuelDetailColumn(
                   "Korišten aditiv",

@@ -5,6 +5,8 @@ class UserModel {
   final String email;
   final String? phone;
   final DateTime? dateOfBirth;
+  final String? preferredLanguage;
+  final String? preferredCurrency;
 
   UserModel({
     required this.uid,
@@ -13,6 +15,8 @@ class UserModel {
     required this.email,
     this.phone,
     this.dateOfBirth,
+    this.preferredLanguage,
+    this.preferredCurrency,
   });
 
   UserModel copyWith({
@@ -22,6 +26,8 @@ class UserModel {
     String? email,
     String? phone,
     DateTime? dateOfBirth,
+    String? preferredLanguage,
+    String? preferredCurrency,
   }) {
     return UserModel(
       uid: uid ?? this.uid,
@@ -30,6 +36,8 @@ class UserModel {
       email: email ?? this.email,
       phone: phone ?? this.phone,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      preferredLanguage: preferredLanguage ?? this.preferredLanguage,
+      preferredCurrency: preferredCurrency ?? this.preferredCurrency,
     );
   }
 
@@ -40,7 +48,9 @@ class UserModel {
       'last_name': lastName,
       'email': email,
       'phone': phone,
-      'dateOfBirth': dateOfBirth?.toIso8601String(),
+      'date_of_birth': dateOfBirth?.toIso8601String(),
+      'preferred_language': preferredLanguage,
+      'preferred_currency': preferredCurrency,
     };
   }
 
@@ -51,9 +61,11 @@ class UserModel {
       lastName: map['last_name'] ?? '',
       email: map['email'] ?? '',
       phone: map['phone'],
-      dateOfBirth: map['dateOfBirth'] != null
-          ? DateTime.parse(map['dateOfBirth'])
+      dateOfBirth: map['date_of_birth'] != null
+          ? DateTime.parse(map['date_of_birth'])
           : null,
+      preferredLanguage: map['preferred_language'],
+      preferredCurrency: map['preferred_currency'],
     );
   }
 }

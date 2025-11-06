@@ -37,7 +37,7 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
         appBar: const CustomAppBar(title: 'Servisi'),
         body: Container(
           alignment: Alignment.topCenter,
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          padding: const EdgeInsets.symmetric(vertical: 15),
           child: carsAsync.when(
             data: (cars) => cars.isEmpty
                 ? const CustomAlert(
@@ -63,7 +63,6 @@ class _ServicesScreenState extends ConsumerState<ServicesScreen> {
     return Scaffold(
       appBar: const CustomAppBar(title: 'Servisi'),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Column(
           children: [
             Row(

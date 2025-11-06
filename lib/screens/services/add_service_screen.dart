@@ -6,10 +6,12 @@ import 'package:iconify_design/iconify_design.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:intl/intl.dart';
+import 'package:motus/utils/currency_formatter.dart';
 
 import '../../models/car_model.dart';
 import '../../models/user_model.dart';
 import '../../models/service_model.dart';
+import '../../providers/currency_provider.dart';
 import '../../providers/service/service_provider.dart';
 import '../../providers/user_provider.dart';
 import '../../providers/car_provider.dart';
@@ -71,7 +73,9 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
       },
     );
     if (picked != null && picked != _selectedDate) {
-      _selectedDate = picked;
+      setState(() {
+        _selectedDate = picked;
+      });
     }
   }
 
@@ -122,6 +126,8 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
     try {
       final servicesProvider = ref.read(servicesServiceProvider)!;
       final carProvider = ref.read(carServiceProvider)!;
+      final preferedCurrency = ref.read(currencyStreamProvider).asData?.value;
+      final currencyProvider = ref.read(currencyServiceProvider);
 
       final double priceValue =
           double.tryParse(_priceController.text.trim().replaceAll(',', '.')) ??
@@ -133,12 +139,14 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
           )?.toInt() ??
           0;
 
+      final formattedPrice = currencyProvider.toEur(priceValue, preferedCurrency.toString());
+
       final tempService = ServiceModel(
         id: '',
         carId: _selectedCarId!,
         type: _serviceTypeController.text.trim(),
         service_notes: _serviceNotesController.text.trim(),
-        price: priceValue,
+        price: formattedPrice,
         date: _selectedDate!,
         mileage_at_service: mileageValue,
         service_center: _serviceCenterController.text.trim(),
@@ -226,7 +234,7 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
           return Scaffold(
             appBar: const CustomAppBar(title: 'Dodaj servis'),
             body: const Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 15),
+              padding: const EdgeInsets.symmetric(vertical: 15),
               child: const CustomAlert(
                 type: AlertType.warning,
                 title: "Nema dostupnih vozila",
@@ -240,7 +248,7 @@ class _AddServiceScreenState extends ConsumerState<AddServiceScreen> {
         return Scaffold(
           appBar: const CustomAppBar(title: 'Dodaj servis'),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(25, 10, 25, 30),
+            padding: const EdgeInsets.fromLTRB(0, 10, 0, 30),
             child: Form(
               key: _formKey,
               child: Column(

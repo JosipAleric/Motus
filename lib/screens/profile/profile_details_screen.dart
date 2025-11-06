@@ -132,7 +132,7 @@ class _ProfileDetailsScreenState extends ConsumerState<ProfileDetailsScreen> {
         data: (user) {
           if (user == null) {
             return Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 15.0),
+              padding: const EdgeInsets.symmetric(vertical: 15.0),
               child: CustomAlert(
                 type: AlertType.error,
                 title: "Greška",
@@ -145,7 +145,6 @@ class _ProfileDetailsScreenState extends ConsumerState<ProfileDetailsScreen> {
             child: Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
                   vertical: 20,
                 ),
                 child: Column(

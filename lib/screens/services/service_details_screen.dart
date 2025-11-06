@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:iconify_design/iconify_design.dart';
+import 'package:motus/utils/currency_formatter.dart';
 import 'package:motus/widgets/customSnackbar.dart';
 import '../../providers/service/service_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/currencyText.dart';
 import '../../widgets/customAlert.dart';
 import '../../widgets/customAppBar.dart';
 import '../../widgets/customButton.dart';
@@ -112,7 +114,7 @@ class ServiceDetailsScreen extends ConsumerWidget {
         data: (data) {
           if (data == null) {
             return const Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.symmetric(vertical: 20),
               child: CustomAlert(
                 type: AlertType.error,
                 title: "Greška",
@@ -126,7 +128,7 @@ class ServiceDetailsScreen extends ConsumerWidget {
           final car = data.car;
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(vertical: 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -205,39 +207,39 @@ class ServiceDetailsScreen extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 20),
-                buildServiceDetailColumn(
+                _buildServiceDetailColumn(
                   context,
                   "Vrsta servisa",
                   service.type,
                   'tabler:file-description-filled',
                 ),
-                buildServiceDetailColumn(
+                _buildServiceDetailColumn(
                   context,
                   "Datum servisa",
                   '${service.date.day}.${service.date.month}.${service.date.year}.',
                   'lets-icons:date-range-light',
                 ),
-                buildServiceDetailColumn(
+                _buildServiceDetailColumn(
                   context,
                   "Servisni centar",
                   service.service_center,
                   'qlementine-icons:rename-16',
                 ),
-                buildServiceDetailColumn(
+                _buildServiceDetailColumn(
                   context,
                   "Cijena",
-                  service.price.toStringAsFixed(2),
+                  formatPrice(service.price, ref)["amount"]! + " " + formatPrice(service.price, ref)["currency"]!,
                   'material-symbols:attach-money-rounded',
-                  suffixText: "BAM",
+                  suffixText: formatPrice(service.price, ref)["currency"]!,
                 ),
-                buildServiceDetailColumn(
+                _buildServiceDetailColumn(
                   context,
                   "Kilometraža pri servisu",
                   formattedMileage(service.mileage_at_service),
                   'stash:data-numbers',
                   suffixText: "KM",
                 ),
-                buildServiceDetailColumn(
+                _buildServiceDetailColumn(
                   context,
                   "Napomene",
                   service.service_notes.isNotEmpty
@@ -405,7 +407,7 @@ class ServiceDetailsScreen extends ConsumerWidget {
     );
   }
 
-  Column buildServiceDetailColumn(
+  Column _buildServiceDetailColumn(
       BuildContext context,
       String detailTitle,
       String detailValue,

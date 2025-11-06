@@ -14,6 +14,7 @@ import 'package:motus/screens/refuels/edit_refuel_screen.dart';
 import 'package:motus/screens/refuels/refuel_details_screen.dart';
 import 'package:motus/screens/refuels/refuels_screen.dart';
 import 'package:motus/screens/services/edit_service_screen.dart';
+import 'package:motus/screens/settings_screen.dart';
 import 'package:motus/widgets/customDrawer.dart';
 import 'firebase_options.dart';
 
@@ -157,6 +158,11 @@ final _router = GoRouter(
           builder: (_, __) => const ProfileDetailsScreen(),
         ),
         GoRoute(
+          path: '/settings',
+          name: 'settings',
+          builder: (_, __) => const SettingsScreen(),
+        ),
+        GoRoute(
           path: '/add_service',
           name: 'add_service',
           builder: (_, __) => const AddServiceScreen(),
@@ -264,7 +270,8 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
 
   void _updateSelectedIndex() {
     final location =
-        GoRouter.of(context).routeInformationProvider.value.uri.toString() ?? '/';
+        GoRouter.of(context).routeInformationProvider.value.uri.toString() ??
+        '/';
     final newIndex = getTabIndexFromLocation(location);
     if (_selectedIndex != newIndex) setState(() => _selectedIndex = newIndex);
   }
@@ -312,7 +319,12 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
     return Scaffold(
       key: _scaffoldKey,
       drawer: const CustomDrawer(),
-      body: SafeArea(child: widget.child),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: widget.child,
+        ),
+      ),
       bottomNavigationBar: CustomBottomNav(onItemTapped: _onItemTapped),
     );
   }

@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:iconify_design/iconify_design.dart';
+import 'package:motus/utils/currency_formatter.dart'; // Dodan import za formatiranje cijena
 import '../../models/refuel_model.dart';
 import '../../providers/car_provider.dart';
 import '../../providers/refuel/refuel_provider.dart';
 import '../../providers/user_provider.dart';
+import '../../providers/currency_provider.dart'; // Dodan import za CurrencyProvider
 import '../../theme/app_theme.dart';
 import '../../widgets/customAlert.dart';
 import '../../widgets/customAppBar.dart';
@@ -42,10 +44,12 @@ class _EditRefuelScreenState extends ConsumerState<EditRefuelScreen> {
   bool _isSaving = false;
 
   void _populateFields(RefuelModel refuel) {
+    final Map<String, String> formattedPrice = formatPrice(refuel.price, ref);
+
     _selectedDate = refuel.date;
     _mileageController.text = refuel.mileageAtRefuel.toString();
     _litersController.text = refuel.liters.toString();
-    _priceController.text = refuel.price.toString();
+    _priceController.text = formattedPrice["amount"]!;
     _gasStationController.text = refuel.gasStation ?? "";
     _notesController.text = refuel.notes ?? "";
     _usedAditives = refuel.usedFuelAditives;
@@ -70,12 +74,17 @@ class _EditRefuelScreenState extends ConsumerState<EditRefuelScreen> {
       },
     );
     if (picked != null && picked != _selectedDate) {
-      _selectedDate = picked;
+      setState(() {
+        _selectedDate = picked;
+      });
     }
   }
 
   Future<void> _save(RefuelModel original) async {
     final carProvider = ref.read(carServiceProvider)!;
+    final preferedCurrency = ref.read(currencyStreamProvider).asData?.value;
+    final currencyProvider = ref.read(currencyServiceProvider);
+
     if (!_formKey.currentState!.validate() || _selectedDate == null) {
       CustomSnackbar.show(
         context,
@@ -89,12 +98,14 @@ class _EditRefuelScreenState extends ConsumerState<EditRefuelScreen> {
     setState(() => _isSaving = true);
 
     final liters = double.tryParse(_litersController.text.replaceAll(',', '.')) ?? 0;
-    final price = double.tryParse(_priceController.text.replaceAll(',', '.')) ?? 0;
+    final priceValue = double.tryParse(_priceController.text.replaceAll(',', '.')) ?? 0;
     final mileageValue = int.tryParse(_mileageController.text.trim()) ??
         double.tryParse(
           _mileageController.text.trim().replaceAll(',', '.'),
         )?.toInt() ??
         0;
+
+    final formattedPrice = currencyProvider.toEur(priceValue, preferedCurrency.toString());
 
     final updated = RefuelModel(
       id: original.id,
@@ -102,8 +113,8 @@ class _EditRefuelScreenState extends ConsumerState<EditRefuelScreen> {
       date: _selectedDate!,
       mileageAtRefuel: mileageValue,
       liters: liters,
-      pricePerLiter: price / liters,
-      price: price,
+      pricePerLiter: formattedPrice / liters,
+      price: formattedPrice,
       usedFuelAditives: _usedAditives,
       gasStation: _gasStationController.text.trim(),
       notes: _notesController.text.trim(),
@@ -123,7 +134,7 @@ class _EditRefuelScreenState extends ConsumerState<EditRefuelScreen> {
 
     ref.invalidate(refuelByIdProvider((refuelId: widget.refuelId, carId: widget.carId)));
     ref.invalidate(refuelStatsProvider(widget.carId));
-    ref.invalidate(refuelsPaginatorProvider(widget.carId));
+    //ref.invalidate(refuelsPaginatorProvider(widget.carId));
 
     setState(() => _isSaving = false);
 
@@ -141,6 +152,7 @@ class _EditRefuelScreenState extends ConsumerState<EditRefuelScreen> {
   @override
   Widget build(BuildContext context) {
     final refuelAsync = ref.watch(refuelByIdProvider((refuelId: widget.refuelId, carId: widget.carId)));
+    final selectedCurrency = ref.watch(currencyStreamProvider).value?.toUpperCase(); // Učitavanje valute
 
     return Scaffold(
       appBar: CustomAppBar(
@@ -168,10 +180,13 @@ class _EditRefuelScreenState extends ConsumerState<EditRefuelScreen> {
             );
           }
 
-          _populateFields(data.refuel);
+          // Pozivanje popunjavanja polja tek kada su podaci učitani
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _populateFields(data.refuel);
+          });
 
           return SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(25, 10, 25, 30),
+            padding: const EdgeInsets.fromLTRB(0, 10, 0, 30),
             child: Form(
               key: _formKey,
               child: Column(
@@ -191,7 +206,7 @@ class _EditRefuelScreenState extends ConsumerState<EditRefuelScreen> {
                     controller: _litersController,
                     label: 'Litara goriva',
                     icon: 'mdi:gas-pump',
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true), // Omogućavanje decimalnih vrijednosti
                     hint: "50.00 L",
                     suffixText: "L",
                     validator: (v) => v!.isEmpty ? 'Obavezno' : null,
@@ -200,9 +215,9 @@ class _EditRefuelScreenState extends ConsumerState<EditRefuelScreen> {
                     controller: _priceController,
                     label: 'Cijena',
                     icon: 'material-symbols:attach-money-rounded',
-                    suffixText: "BAM",
+                    suffixText: selectedCurrency.toString(), // Koristi valutu
                     hint: "105.5",
-                    keyboardType: TextInputType.number,
+                    keyboardType: const TextInputType.numberWithOptions(decimal: true), // Omogućavanje decimalnih vrijednosti
                     validator: (v) => v!.isEmpty ? 'Obavezno' : null,
                   ),
 

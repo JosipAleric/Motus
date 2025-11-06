@@ -179,11 +179,13 @@ class ServicesService {
   // ----------------------------------------------------------------------
 
   Future<DocumentReference<Map<String, dynamic>>> addService(String carId, ServiceModel service) async {
-    final ref = _serviceCollection(carId).doc();
-    final serviceWithId = service.copyWith(id: ref.id);
+    final serviceRef = _serviceCollection(carId).doc();
+    final serviceWithId = service.copyWith(id: serviceRef.id);
 
-    await ref.set(serviceWithId.toMap());
-    return ref;
+    final currency =
+
+    await serviceRef.set(serviceWithId.toMap());
+    return serviceRef;
   }
 
   Future<void> updateService(

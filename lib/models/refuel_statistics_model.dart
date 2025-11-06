@@ -13,6 +13,20 @@ class RefuelStatistics {
 
   double _round(double value) => double.parse(value.toStringAsFixed(2));
 
+  RefuelStatistics copyWith({
+    double? averageConsumption,
+    double? totalCost,
+    double? averageCostPerRefuel,
+    int? totalRefuels,
+  }) {
+     return RefuelStatistics(
+      averageConsumption: averageConsumption ?? this.averageConsumption,
+      totalCost: totalCost ?? this.totalCost,
+      averageCostPerRefuel: averageCostPerRefuel ?? this.averageCostPerRefuel,
+      totalRefuels: totalRefuels ?? this.totalRefuels,
+    );
+  }
+
   @override
   String toString() {
     return 'RefuelStatistics(\n'
