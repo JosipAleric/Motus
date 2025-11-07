@@ -82,3 +82,23 @@ StreamProvider.autoDispose.family<RefuelStatistics?, String>((ref, carId) {
   if (service == null) return const Stream.empty();
   return service.getRefuelStatisticsStream(carId);
 });
+
+
+final refuelGraphProvider = FutureProvider.family
+    .autoDispose<Map<String, double>, ({String carId, String period, String year})>((ref, args) async {
+
+  final service = _getServiceInstance(ref);
+  if (service == null) return {'totalCost': 0, 'totalLiters': 0};
+
+  // Ako year nije broj (string se šalje), parsiraj ga sigurno
+  final parsedYear = int.tryParse(args.year);
+
+  final res = await service.getFuelSummaryForPeriod(
+    carId: args.carId,
+    period: args.period,
+    year: parsedYear, // koristi se samo ako je period == 'year'
+  );
+
+  return res;
+});
+

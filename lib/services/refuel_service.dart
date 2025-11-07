@@ -180,6 +180,67 @@ class RefuelService {
     });
   }
 
+  Future<Map<String, double>> getFuelSummaryForPeriod({
+    required String carId,
+    String period = 'month',
+    int? year,
+  }) async {
+    final now = DateTime.now().toUtc();
+    DateTime? startDate;
+    DateTime? endDate;
+
+    switch (period) {
+      case 'month':
+        startDate = now.subtract(const Duration(days: 30));
+        endDate = now;
+        break;
+
+      case 'year':
+        final selectedYear = year ?? now.year;
+        startDate = DateTime(selectedYear, 1, 1);
+        endDate = DateTime(selectedYear, 12, 31, 23, 59, 59);
+        break;
+
+      case 'all':
+        startDate = null;
+        endDate = null;
+        break;
+
+      default:
+        throw ArgumentError('Nepoznat period: $period');
+    }
+
+    Query query = _refuelsRef(carId);
+
+    if (startDate != null && endDate != null) {
+      query = query
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate));
+    }
+
+    query = query.orderBy('date', descending: false);
+
+    final snapshot = await query.get();
+
+    double totalCost = 0.0;
+    double totalLiters = 0.0;
+
+    for (var doc in snapshot.docs) {
+      final refuel = RefuelModel.fromMap(doc);
+      totalCost += refuel.price;
+      totalLiters += refuel.liters;
+    }
+
+    return {
+      'totalCost': totalCost,
+      'totalLiters': totalLiters,
+    };
+  }
+
+
+
+
+
   // ----------------------------------------------------------------------
   // CRUD
   // ----------------------------------------------------------------------

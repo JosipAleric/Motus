@@ -14,6 +14,7 @@ import '../../utils/currency_formatter.dart';
 import '../../widgets/customAlert.dart';
 
 import '../../widgets/customAppBar.dart';
+import '../../widgets/customBarChart.dart';
 import '../../widgets/paginationWidget.dart';
 
 class RefuelsScreen extends ConsumerStatefulWidget {
@@ -36,11 +37,12 @@ class _RefuelsScreenState extends ConsumerState<RefuelsScreen> {
         data: (cars) {
           if (cars.isEmpty) {
             return const Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: const CustomAlert(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: CustomAlert(
                 type: AlertType.info,
                 title: "Obavijest",
-                message: "Dodajte vozilo kako biste pratili povijest točenja goriva.",
+                message:
+                    "Dodajte vozilo kako biste pratili povijest točenja goriva.",
               ),
             );
           }
@@ -48,7 +50,7 @@ class _RefuelsScreenState extends ConsumerState<RefuelsScreen> {
           _selectedCarId ??= cars.first.id;
 
           final selectedCar = cars.firstWhere(
-                (car) => car.id == _selectedCarId,
+            (car) => car.id == _selectedCarId,
             orElse: () => cars.first,
           );
 
@@ -56,7 +58,9 @@ class _RefuelsScreenState extends ConsumerState<RefuelsScreen> {
             child: RefreshIndicator(
               onRefresh: () async {
                 if (_selectedCarId != null) {
-                  final paginatorNotifier = ref.read(refuelsPaginatorProvider(_selectedCarId!).notifier);
+                  final paginatorNotifier = ref.read(
+                    refuelsPaginatorProvider(_selectedCarId!).notifier,
+                  );
                   paginatorNotifier.reset();
                   await paginatorNotifier.loadPage(0);
                   ref.invalidate(refuelStatsProvider(_selectedCarId!));
@@ -101,9 +105,9 @@ class _RefuelsScreenState extends ConsumerState<RefuelsScreen> {
                     _selectedCarId == null
                         ? const Center(child: Text('Odaberi vozilo'))
                         : RefuelsContent(
-                      carId: _selectedCarId!,
-                      selectedCar: selectedCar,
-                    ),
+                            carId: _selectedCarId!,
+                            selectedCar: selectedCar,
+                          ),
                   ],
                 ),
               ),
@@ -117,7 +121,7 @@ class _RefuelsScreenState extends ConsumerState<RefuelsScreen> {
   }
 }
 
-class RefuelsContent extends ConsumerWidget {
+class RefuelsContent extends ConsumerStatefulWidget {
   final String carId;
   final CarModel selectedCar;
 
@@ -128,10 +132,28 @@ class RefuelsContent extends ConsumerWidget {
   }) : super(key: key);
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(refuelStatsProvider(carId));
-    final paginatorState = ref.watch(refuelsPaginatorProvider(carId));
-    final paginatorNotifier = ref.read(refuelsPaginatorProvider(carId).notifier);
+  ConsumerState<RefuelsContent> createState() => _RefuelsContentState();
+}
+
+class _RefuelsContentState extends ConsumerState<RefuelsContent> {
+  String _selectedPeriod = 'year';
+  String _selectedYear = DateTime.now().year.toString();
+
+  @override
+  Widget build(BuildContext context) {
+    final statsAsync = ref.watch(refuelStatsProvider(widget.carId));
+    final paginatorState = ref.watch(refuelsPaginatorProvider(widget.carId));
+    final paginatorNotifier = ref.read(
+      refuelsPaginatorProvider(widget.carId).notifier,
+    );
+
+    final refuelGraphDataAsync = ref.watch(
+      refuelGraphProvider((
+        carId: widget.carId,
+        period: _selectedPeriod,
+        year: _selectedYear,
+      )),
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,7 +181,7 @@ class RefuelsContent extends ConsumerWidget {
                         icon: 'ix:average',
                         label: 'Potrošnja',
                         text:
-                        '${stats.averageConsumption.toStringAsFixed(1)} L/100km',
+                            '${stats.averageConsumption.toStringAsFixed(1)} L/100km',
                       ),
                     ),
                     const SizedBox(width: 10),
@@ -167,7 +189,8 @@ class RefuelsContent extends ConsumerWidget {
                       child: _infoChip(
                         icon: 'hugeicons:chart-average',
                         label: "Po točenju",
-                        text: '${formatPrice(stats.averageCostPerRefuel, ref)["amount"]!} ${formatPrice(stats.averageCostPerRefuel, ref)["currency"]!}',
+                        text:
+                            '${formatPrice(stats.averageCostPerRefuel, ref)["amount"]!} ${formatPrice(stats.averageCostPerRefuel, ref)["currency"]!}',
                       ),
                     ),
                   ],
@@ -188,7 +211,8 @@ class RefuelsContent extends ConsumerWidget {
                       child: _infoChip(
                         icon: 'hugeicons:summation-02',
                         label: "Trošak",
-                        text: '${formatPrice(stats.totalCost, ref)["amount"]!} ${formatPrice(stats.totalCost, ref)["currency"]!}',
+                        text:
+                            '${formatPrice(stats.totalCost, ref)["amount"]!} ${formatPrice(stats.totalCost, ref)["currency"]!}',
                       ),
                     ),
                   ],
@@ -204,66 +228,167 @@ class RefuelsContent extends ConsumerWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
+            Column(
               crossAxisAlignment: CrossAxisAlignment.center,
-              children: const [
-                SizedBox(width: 1),
-                Padding(
-                  padding: EdgeInsets.only(top: 3),
-                  child: IconifyIcon(
-                    icon: 'icon-park-outline:right',
-                    color: AppColors.textPrimary,
-                    size: 20,
-                  ),
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    _buildTitle("Pregled potrošnje"),
+                    _PeriodDropdown(
+                      selectedPeriod: _selectedPeriod,
+                      selectedYear: _selectedYear,
+                      onPeriodChanged: (newPeriod) {
+                        setState(() {
+                          _selectedPeriod = newPeriod!;
+                          if (newPeriod == 'year' && _selectedYear.isEmpty) {
+                            _selectedYear = DateTime.now().year.toString();
+                          }
+                        });
+                      },
+                      onYearChanged: (newYear) {
+                        setState(() {
+                          _selectedYear = newYear!;
+                        });
+                      },
+                    ),
+                  ],
                 ),
-                SizedBox(width: 2),
-                Text(
-                  'Povijest točenja',
-                  style: TextStyle(
-                    fontSize: 18,
-                    color: Colors.black,
-                    fontFamily: "MPlus1",
-                    fontWeight: FontWeight.w400,
-                    letterSpacing: 1.2,
-                    shadows: [
-                      Shadow(
-                        color: Colors.black54,
-                        offset: Offset(0, 0),
-                        blurRadius: 1,
+                if (_selectedPeriod == 'year')
+                  Padding(
+                    padding: const EdgeInsets.only(top: 10, right: 0),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      child: _YearDropdown(
+                        selectedYear: _selectedYear,
+                        onChanged: (newYear) {
+                          setState(() {
+                            _selectedYear = newYear!;
+                          });
+                        },
                       ),
-                    ],
+                    ),
                   ),
+
+                const SizedBox(height: 15),
+                refuelGraphDataAsync.when(
+                  data: (data) {
+                    if (data['totalCost'] == 0 && data['totalLiters'] == 0) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: 20),
+                          child: CustomAlert(
+                            type: AlertType.info,
+                            title: 'Obavijest',
+                            message:
+                                'Nema dostupnih podataka za odabrane filtere.',
+                          ),
+                        ),
+                      );
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(
+                        right: 40,
+                        left: 5,
+                        bottom: 15,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ChartLine(
+                            title: 'Ukupni trošak goriva',
+                            number: data['totalCost']!.toInt(),
+                            rate: 1,
+                            key: const Key("cost"),
+                          ),
+                          const SizedBox(height: 10),
+                          ChartLine(
+                            title: 'Ukupno litara goriva',
+                            number: data['totalLiters']!.toInt(),
+                            rate: 0.7,
+                            key: const Key("liters"),
+                            reversed: true,
+                            suffix: " Litara",
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  error: (e, _) =>
+                      Center(child: Text('Greška: ${e.toString()}')),
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
                 ),
+
+
+                _buildTitle("Povijest točenja"),
+                const SizedBox(height: 15),
+
+                PaginationWidget<RefuelModel>(
+                  state: paginatorState,
+                  notifier: paginatorNotifier,
+                  emptyMessage:
+                      "Nema zabilježenih točenja goriva za ovo vozilo. Dodajte novi zapis kako biste pravili povijest točenja.",
+                  outerScrollable: true,
+                  itemBuilder: (context, refuel) {
+                    return CustomRefuelCard(
+                      carModel: widget.selectedCar.model,
+                      carBrand: widget.selectedCar.brand,
+                      date: refuel.date,
+                      price: refuel.price,
+                      liters: refuel.liters,
+                      onDetailsTap: () {
+                        GoRouter.of(context).pushNamed(
+                          'refuel_details',
+                          pathParameters: {
+                            'carId': widget.carId,
+                            'refuelId': refuel.id,
+                          },
+                        );
+                      },
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 25),
               ],
             ),
-            const SizedBox(height: 15),
-
-            PaginationWidget<RefuelModel>(
-              state: paginatorState,
-              notifier: paginatorNotifier,
-              emptyMessage: "Nema zabilježenih točenja goriva za ovo vozilo. Dodajte novi zapis kako biste pravili povijest točenja.",
-              outerScrollable: true,
-              itemBuilder: (context, refuel) {
-                return CustomRefuelCard(
-                    carModel: selectedCar.model,
-                    carBrand: selectedCar.brand,
-                    date: refuel.date,
-                    price: refuel.price,
-                    liters: refuel.liters,
-                    // TODO: Implementirati onDetailsTap logiku za prikaz detalja
-                    onDetailsTap: () {
-                      GoRouter.of(context).pushNamed(
-                        'refuel_details',
-                        pathParameters: {
-                          'carId': carId,
-                          'refuelId': refuel.id,
-                        },
-                      );
-                    },
-                );
-              },
-            ),
           ],
+        ),
+      ],
+    );
+  }
+
+  Row _buildTitle(String title) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.only(top: 3),
+          child: IconifyIcon(
+            icon: 'icon-park-outline:right',
+            color: AppColors.textPrimary,
+            size: 20,
+          ),
+        ),
+        const SizedBox(width: 2),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            color: Colors.black,
+            fontFamily: "MPlus1",
+            fontWeight: FontWeight.w400,
+            letterSpacing: 1.2,
+            shadows: [
+              Shadow(
+                color: Colors.black54,
+                offset: Offset(0, 0),
+                blurRadius: 1,
+              ),
+            ],
+          ),
         ),
       ],
     );
@@ -342,6 +467,151 @@ class _CarDropdown extends StatelessWidget {
   }
 }
 
+class _PeriodDropdown extends StatelessWidget {
+  final String selectedPeriod;
+  final String selectedYear;
+  final ValueChanged<String?> onPeriodChanged;
+  final ValueChanged<String?> onYearChanged;
+
+  const _PeriodDropdown({
+    required this.selectedPeriod,
+    required this.selectedYear,
+    required this.onPeriodChanged,
+    required this.onYearChanged,
+  });
+
+  String _getLabel(String value) {
+    switch (value) {
+      case 'all':
+        return 'Cijelo vrijeme';
+      case 'month':
+        return 'Posljednji mjesec';
+      case 'year':
+        return 'Po godini';
+      default:
+        return '';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final List<DropdownMenuItem<String>> periodOptions = [
+      const DropdownMenuItem(value: 'all', child: Text('Cijelo vrijeme')),
+      const DropdownMenuItem(value: 'month', child: Text('Posljednji mjesec')),
+      const DropdownMenuItem(value: 'year', child: Text('Po godini')),
+    ];
+
+    const textStyle = TextStyle(
+      fontWeight: FontWeight.w600,
+      fontSize: 12,
+      color: AppColors.textPrimary,
+    );
+
+    return IntrinsicWidth(
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: selectedPeriod,
+          isDense: true,
+          isExpanded: true,
+          dropdownColor: Colors.white,
+
+          selectedItemBuilder: (BuildContext context) {
+            return periodOptions.map((item) {
+              return Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  _getLabel(item.value!),
+                  style: textStyle,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            }).toList();
+          },
+
+          icon: Container(
+            alignment: Alignment.centerLeft,
+            padding: const EdgeInsets.only(left: 5, top: 2),
+            child: const IconifyIcon(
+              icon: 'famicons:chevron-down-outline',
+              color: AppColors.textPrimary,
+              size: 15,
+            ),
+          ),
+
+          onChanged: onPeriodChanged,
+          items: periodOptions,
+          style: textStyle,
+        ),
+      ),
+    );
+  }
+}
+
+class _YearDropdown extends StatelessWidget {
+  final String selectedYear;
+  final ValueChanged<String?> onChanged;
+
+  const _YearDropdown({required this.selectedYear, required this.onChanged});
+
+  @override
+  Widget build(BuildContext context) {
+    final currentYear = DateTime.now().year;
+    final List<DropdownMenuItem<String>> yearOptions = [
+      for (int i = 0; i < 10; i++)
+        DropdownMenuItem(
+          value: (currentYear - i).toString(),
+          child: Text((currentYear - i).toString()),
+        ),
+    ];
+
+    return Container(
+      padding: EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        mainAxisSize: MainAxisSize.max,
+        children: [
+          const Text(
+            "Godina:",
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              dropdownColor: Colors.white,
+              value: selectedYear,
+              menuMaxHeight: 200,
+              icon: Container(
+                alignment: Alignment.center,
+                padding: const EdgeInsets.only(left: 5, top: 2),
+                child: const IconifyIcon(
+                  icon: 'famicons:chevron-down-outline',
+                  color: AppColors.textPrimary,
+                  size: 16,
+                ),
+              ),
+              onChanged: onChanged,
+              items: yearOptions,
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                color: AppColors.textPrimary,
+              ),
+              padding: EdgeInsets.zero,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 Widget _infoChip({
   required String icon,
   required String label,
@@ -362,32 +632,40 @@ Widget _infoChip({
             color: Colors.white,
             borderRadius: BorderRadius.circular(15),
           ),
-          child: IconifyIcon(icon: icon, size: 20, color: Color(0xFF252525)),
+          child: IconifyIcon(
+            icon: icon,
+            size: 20,
+            color: const Color(0xFF252525),
+          ),
         ),
         const SizedBox(width: 10),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
-                letterSpacing: 1.2,
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                  letterSpacing: 1.2,
+                ),
               ),
-            ),
-            const SizedBox(height: 3),
-            Text(
-              text,
-              style: const TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textSecondary,
-                letterSpacing: 1.2,
+              const SizedBox(height: 3),
+              Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textSecondary,
+                  letterSpacing: 1.2,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ],
     ),
