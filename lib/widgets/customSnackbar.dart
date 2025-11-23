@@ -21,7 +21,6 @@ class CustomSnackbar extends StatefulWidget {
   @override
   State<CustomSnackbar> createState() => _CustomSnackbarState();
 
-  /// Static helper za jednostavno prikazivanje preko Overlaya
   static void show(
       BuildContext context, {
         required AlertType type,

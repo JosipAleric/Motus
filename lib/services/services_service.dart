@@ -37,15 +37,15 @@ class ServicesService {
 
   // Paination for services of a specific car
   Future<PaginationResult<ServiceCar>> getServicesForCarPage(
-      String carId, {
-        int pageSize = 4,
-        QueryDocumentSnapshot<Map<String, dynamic>>? startAfter,
-      }) async {
+    String carId, {
+    int pageSize = 4,
+    QueryDocumentSnapshot<Map<String, dynamic>>? startAfter,
+  }) async {
     final car = await _getCar(carId);
 
-    Query<Map<String, dynamic>> q = _serviceCollection(carId)
-        .orderBy('date', descending: true)
-        .limit(pageSize);
+    Query<Map<String, dynamic>> q = _serviceCollection(
+      carId,
+    ).orderBy('date', descending: true).limit(pageSize);
 
     if (startAfter != null) q = q.startAfterDocument(startAfter);
 
@@ -57,15 +57,14 @@ class ServicesService {
     }).toList();
 
     bool hasMore = false;
-    try{
+    try {
       final nextPage = await q.startAfterDocument(snapshot.docs.last).get();
-      if(nextPage.docs.isNotEmpty){
+      if (nextPage.docs.isNotEmpty) {
         hasMore = true;
       } else {
         hasMore = false;
       }
-    }
-    catch(e){
+    } catch (e) {
       print(e);
     }
 
@@ -76,14 +75,12 @@ class ServicesService {
     );
   }
 
-
   Stream<List<ServiceCar>> getServicesForCarStream(String carId) {
     final carFuture = _getCar(carId);
 
-    return _serviceCollection(carId)
-        .orderBy('date', descending: true)
-        .snapshots()
-        .asyncMap((snapshot) async {
+    return _serviceCollection(
+      carId,
+    ).orderBy('date', descending: true).snapshots().asyncMap((snapshot) async {
       final car = await carFuture;
       return snapshot.docs
           .map((d) => ServiceModel.fromMap(d.data(), d.id))
@@ -94,9 +91,9 @@ class ServicesService {
 
   Future<List<ServiceCar>> getServicesForCar(String carId) async {
     final car = await _getCar(carId);
-    final snapshot = await _serviceCollection(carId)
-        .orderBy('date', descending: true)
-        .get();
+    final snapshot = await _serviceCollection(
+      carId,
+    ).orderBy('date', descending: true).get();
 
     return snapshot.docs.map((d) {
       final service = ServiceModel.fromMap(d.data(), d.id);
@@ -104,9 +101,11 @@ class ServicesService {
     }).toList();
   }
 
-
   // Service details
-  Future<ServiceCar?> getServiceWithCar({required String carId, required String serviceId}) async {
+  Future<ServiceCar?> getServiceWithCar({
+    required String carId,
+    required String serviceId,
+  }) async {
     final doc = await _serviceCollection(carId).doc(serviceId).get();
 
     if (!doc.exists) return null;
@@ -117,10 +116,7 @@ class ServicesService {
     return ServiceCar(service: service, car: car);
   }
 
-  // ----------------------------------------------------------------------
   // Latest services
-  // ----------------------------------------------------------------------
-
   Future<Map<String, dynamic>?> getLastServiceForCar(String carId) async {
     final carSnap = await _db
         .collection('users')
@@ -132,10 +128,9 @@ class ServicesService {
     if (!carSnap.exists) return null;
     final car = CarModel.fromMap(carSnap.data()!, carSnap.id);
 
-    final serviceSnap = await _serviceCollection(carId)
-        .orderBy('date', descending: true)
-        .limit(1)
-        .get();
+    final serviceSnap = await _serviceCollection(
+      carId,
+    ).orderBy('date', descending: true).limit(1).get();
 
     if (serviceSnap.docs.isEmpty) return null;
 
@@ -157,10 +152,9 @@ class ServicesService {
     for (var c in carsSnap.docs) {
       final car = CarModel.fromMap(c.data(), c.id);
 
-      final servicesSnap = await _serviceCollection(car.id)
-          .orderBy('date', descending: true)
-          .limit(2)
-          .get();
+      final servicesSnap = await _serviceCollection(
+        car.id,
+      ).orderBy('date', descending: true).limit(2).get();
 
       for (var s in servicesSnap.docs) {
         final service = ServiceModel.fromMap(s.data(), s.id);
@@ -168,29 +162,70 @@ class ServicesService {
       }
     }
 
-    all.sort((a, b) =>
-        (b['service'].date as DateTime).compareTo(a['service'].date));
+    all.sort(
+      (a, b) => (b['service'].date as DateTime).compareTo(a['service'].date),
+    );
 
     return all.take(2).toList();
   }
 
-  // ----------------------------------------------------------------------
-  //  CRUD
-  // ----------------------------------------------------------------------
+  // Service statistics
+  Future<Map<String, dynamic>> getServiceStats({
+    required String carId,
+    required String period, // 'all', 'month', 'year'
+    int? year,
+  }) async {
+    DateTime? startDate;
+    DateTime? endDate;
+    final now = DateTime.now();
 
-  Future<DocumentReference<Map<String, dynamic>>> addService(String carId, ServiceModel service) async {
+    if (period == 'month') {
+      startDate = DateTime(now.year, now.month, 1);
+      endDate = DateTime(now.year, now.month + 1, 0, 23, 59, 59);
+    } else if (period == 'year' && year != null) {
+      startDate = DateTime(year, 1, 1);
+      endDate = DateTime(year, 12, 31, 23, 59, 59);
+    }
+
+    Query<Map<String, dynamic>> query = _serviceCollection(carId);
+
+    if (startDate != null && endDate != null) {
+      query = query
+          .where('date', isGreaterThanOrEqualTo: Timestamp.fromDate(startDate))
+          .where('date', isLessThanOrEqualTo: Timestamp.fromDate(endDate));
+    }
+
+    query = query.orderBy('date', descending: false);
+    final snapshot = await query.get();
+
+    double totalCost = 0.0;
+    int totalServices = 0;
+
+    for (var doc in snapshot.docs) {
+      final data = doc.data();
+
+      final cost = (data['price'] ?? 0) as num;
+
+      totalCost += cost.toDouble();
+      totalServices += 1;
+    }
+
+    return {'totalCost': totalCost, 'totalServices': totalServices};
+  }
+
+  //  CRUD
+  Future<DocumentReference<Map<String, dynamic>>> addService(
+    String carId,
+    ServiceModel service,
+  ) async {
     final serviceRef = _serviceCollection(carId).doc();
     final serviceWithId = service.copyWith(id: serviceRef.id);
 
-    final currency =
-
-    await serviceRef.set(serviceWithId.toMap());
+    final currency = await serviceRef.set(serviceWithId.toMap());
     return serviceRef;
   }
 
-  Future<void> updateService(
-      ServiceModel service,
-      ) async {
+  Future<void> updateService(ServiceModel service) async {
     final ref = _serviceCollection(service.carId).doc(service.id);
     await ref.set(service.toMap(), SetOptions(merge: true));
   }
@@ -200,9 +235,9 @@ class ServicesService {
     required String serviceId,
   }) async {
     try {
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('users/$_userId/cars/$carId/services/$serviceId/invoice.jpg');
+      final storageRef = FirebaseStorage.instance.ref().child(
+        'users/$_userId/cars/$carId/services/$serviceId/invoice.jpg',
+      );
 
       await storageRef.delete().catchError((_) {
         print('Nema slike za brisanje.');
@@ -213,5 +248,4 @@ class ServicesService {
       print('Greška pri brisanju servisa: $e');
     }
   }
-
 }

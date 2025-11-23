@@ -84,3 +84,20 @@ FutureProvider.autoDispose.family<ServiceCar?, ({String carId, String serviceId}
 
   return service.getServiceWithCar(carId: params.carId, serviceId: params.serviceId);
 });
+
+
+// Provider for service statistics
+final serviceStatsProvider = FutureProvider.autoDispose.family<Map<String, dynamic>, ({String carId, String period, String year})>((ref, args) async {
+  final service = _getServiceInstance(ref);
+  if (service == null)  return {'totalCost': 0, 'totalServices': 0};
+
+  final parsedYear = int.tryParse(args.year);
+
+ final res = await service.getServiceStats(
+    carId: args.carId,
+    period: args.period,
+    year: parsedYear,
+  );
+
+  return res;
+});

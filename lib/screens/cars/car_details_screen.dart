@@ -6,9 +6,9 @@ import 'package:motus/widgets/customAlert.dart';
 import 'package:motus/widgets/customAppBar.dart';
 import '../../providers/car_provider.dart';
 import 'package:iconify_design/iconify_design.dart';
-
 import '../../providers/service/service_provider.dart';
 import '../../theme/app_theme.dart';
+import '../../widgets/customBarChart.dart';
 import '../../widgets/customButton.dart';
 import '../../widgets/customServiceCard.dart';
 import '../../widgets/customSnackbar.dart';
@@ -20,18 +20,25 @@ class CarDetailsScreen extends ConsumerWidget {
 
   const CarDetailsScreen({super.key, required this.carId});
 
+  String formatMileage(int m) {
+    final s = m.toString();
+    return (s.length <= 3)
+        ? "$s km"
+        : "${s.substring(0, s.length - 3)} ${s.substring(s.length - 3)} km";
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final carAsync = ref.watch(carDetailsProvider(carId));
-    final latestServiceForCarAsync = ref.watch(lastServiceForCarProvider(carId));
-    final _isLoading = ref.watch(loadingProvider);
+    final latestServiceAsync = ref.watch(lastServiceForCarProvider(carId));
+    final isLoading = ref.watch(loadingProvider);
 
-    void _deleteCar() async {
+    Future<void> deleteCar() async {
       ref.read(loadingProvider.notifier).state = true;
 
       try {
-        final carDeletionResult = await ref.read(carServiceProvider)!;
-        await carDeletionResult.deleteCar(carId);
+        final service = ref.read(carServiceProvider)!;
+        await service.deleteCar(carId);
 
         if (context.mounted) {
           ref.invalidate(carsProvider);
@@ -41,34 +48,20 @@ class CarDetailsScreen extends ConsumerWidget {
             context,
             type: AlertType.success,
             title: "Uspjeh",
-            message: "Vozilo je uspješno obrisano iz baze podataka.",
+            message: "Vozilo je uspješno obrisano.",
           );
         }
-      } catch (e) {
+      } catch (_) {
         if (context.mounted) {
           CustomSnackbar.show(
             context,
             type: AlertType.error,
             title: "Greška",
-            message: "Došlo je do greške prilikom brisanja vozila. Pokušajte ponovo.",
+            message: "Došlo je do greške. Pokušajte ponovo.",
           );
         }
-      }
-      finally {
+      } finally {
         ref.read(loadingProvider.notifier).state = false;
-      }
-    }
-
-    String formattedMileage (int mileage) {
-      switch(mileage.toString().length) {
-        case 4:
-          return mileage.toString().substring(0, 1) + ' ' + mileage.toString().substring(1) + ' km';
-        case 5:
-          return mileage.toString().substring(0, 2) + ' ' + mileage.toString().substring(2) + ' km';
-        case 6:
-          return mileage.toString().substring(0, 3) + ' ' + mileage.toString().substring(3) + ' km';
-        default:
-          return mileage.toString() + ' km';
       }
     }
 
@@ -77,28 +70,30 @@ class CarDetailsScreen extends ConsumerWidget {
         title: carAsync.when(
           data: (car) => car?.brand ?? 'Detalji auta',
           loading: () => 'Učitavanje...',
-          error: (err, stack) => 'Greška',
+          error: (_, __) => 'Greška',
         ),
         subtitle: carAsync.when(
-          data: (car) =>
-              "${car?.year?.toString() ?? ''} ${car?.model ?? ''}"
-                  .trim()
-                  .isEmpty
-              ? "Detalji auta"
-              : "${car?.year?.toString() ?? ''} ${car?.model ?? ''}",
+          data: (car) {
+            if (car == null) return "Detalji auta";
+            final text = "${car.year ?? ''} ${car.model ?? ''}".trim();
+            return text.isEmpty ? "Detalji auta" : text;
+          },
           loading: () => "Učitavanje...",
-          error: (err, stack) => "Greška",
+          error: (_, __) => "Greška",
         ),
       ),
       body: carAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, _) => Center(child: Text('Greška: $err')),
         data: (car) {
           if (car == null) {
             return const Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20.0),
-              child: const CustomAlert(
+              padding: EdgeInsets.symmetric(vertical: 20),
+              child: CustomAlert(
                 type: AlertType.error,
                 title: "Greška",
-                message: "Greška prilikom učitavanja automobila. Pokušajte ponovo kasnije.",
+                message:
+                "Greška prilikom učitavanja automobila. Pokušajte kasnije.",
               ),
             );
           }
@@ -106,10 +101,7 @@ class CarDetailsScreen extends ConsumerWidget {
           return Stack(
             children: [
               SingleChildScrollView(
-                padding: const EdgeInsets.only(
-                  top: 0.0,
-                  bottom: 40.0,
-                ),
+                padding: const EdgeInsets.only(bottom: 40),
                 child: Center(
                   child: Column(
                     children: [
@@ -117,36 +109,36 @@ class CarDetailsScreen extends ConsumerWidget {
                       Image.asset(
                         'assets/images/car.png',
                         height: 140,
-                        width: double.infinity,
                         fit: BoxFit.contain,
                       ),
                       const SizedBox(height: 15),
+
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(
-                            child: _infoChip(
+                            child: InfoChip(
                               icon: 'lets-icons:road-fill',
                               label: 'Kilometraža',
-                              text: formattedMileage(car.mileage)
+                              text: formatMileage(car.mileage),
                             ),
                           ),
                           const SizedBox(width: 13),
                           Expanded(
-                            child: _infoChip(
-                              icon: 'solar:tag-price-bold',
-                              label: 'Troškovi',
-                              text: "2344 BAM",
+                            child: InfoChip(
+                              icon: 'solar:fuel-bold',
+                              label: 'Gorivo',
+                              text: car.fuel_type,
                             ),
                           ),
                         ],
                       ),
+
                       const SizedBox(height: 15),
+
                       Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(
-                            child: _infoChip(
+                            child: InfoChip(
                               icon: 'ph:calendar-fill',
                               label: 'Godina',
                               text: car.year.toString(),
@@ -154,7 +146,7 @@ class CarDetailsScreen extends ConsumerWidget {
                           ),
                           const SizedBox(width: 13),
                           Expanded(
-                            child: _infoChip(
+                            child: InfoChip(
                               icon: 'fluent:number-row-24-filled',
                               label: 'Registracija',
                               text: car.license_plate,
@@ -165,218 +157,90 @@ class CarDetailsScreen extends ConsumerWidget {
 
                       const SizedBox(height: 30),
 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.only(left: 2),
-                            child: const Text(
-                              'Posljednji servis',
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.black,
-                                fontFamily: "MPlus1",
-                                fontWeight: FontWeight.w400,
-                                letterSpacing: 1.2,
-                                shadows: [
-                                  Shadow(
-                                    color: Colors.black54,
-                                    offset: Offset(0, 0),
-                                    blurRadius: 1,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 32,
-                            child: CustomButton(
-                              text: "Vidi sve",
-                              onPressed: () {
-                                GoRouter.of(context).goNamed('services');
-                              },
-                              icon: "solar:arrow-right-broken",
-                              fontSize: 11,
-                              iconSize: 17,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 0,
-                                horizontal: 20,
-                              ),
-                              outlined: true,
-                              borderRadius: 30.0,
-                            ),
-                          ),
-                        ],
+                      ServicesOverviewCost(carId: car.id),
+
+                      SectionHeader(
+                        title: "Posljednji servis",
+                        buttonText: "Vidi sve",
+                        onPressed: () =>
+                            GoRouter.of(context).goNamed('services'),
                       ),
 
                       const SizedBox(height: 15),
 
-                      latestServiceForCarAsync.when(
+                      latestServiceAsync.when(
+                        loading: () =>
+                        const Center(child: CircularProgressIndicator()),
+                        error: (_, __) => const Text("Greška pri učitavanju."),
                         data: (serviceForCar) {
                           if (serviceForCar == null) {
-                            return const Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 5),
-                              child: const CustomAlert(
-                                type: AlertType.info,
-                                title: 'Obavijest',
-                                message:
-                                    'Nemate evidentiranih servisa. Dodajte novi servis kako biste pratili održavanje vašeg vozila.',
-                              ),
+                            return const CustomAlert(
+                              type: AlertType.info,
+                              title: 'Obavijest',
+                              message:
+                              'Nemate evidentiranih servisa. Dodajte novi servis.',
                             );
                           }
 
                           final service = serviceForCar['service'];
-                          final car = serviceForCar['car'];
+                          final c = serviceForCar['car'];
 
                           return CustomServiceCard(
-                            car: car,
+                            car: c,
                             date: service.date,
                             description: service.type,
-                            price: "${service.price.toStringAsFixed(0)}",
+                            price: service.price.toStringAsFixed(2),
                             onDetailsTap: () {
                               GoRouter.of(context).pushNamed(
                                 'service_details',
                                 pathParameters: {
-                                  'carId': car.id,
+                                  'carId': c.id,
                                   'serviceId': service.id,
                                 },
                               );
                             },
                           );
                         },
-                        loading: () =>
-                            const Center(child: CircularProgressIndicator()),
-                        error: (e, _) => Text("Greška: $e"),
                       ),
 
                       const SizedBox(height: 30),
 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Detalji o vozilu',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.black,
-                              fontFamily: "MPlus1",
-                              fontWeight: FontWeight.w400,
-                              letterSpacing: 1.2,
-                              shadows: [
-                                Shadow(
-                                  color: Colors.black54,
-                                  offset: Offset(0, 0),
-                                  blurRadius: 1,
-                                ),
-                              ],
-                            ),
-                          ),
-                          SizedBox(
-                            height: 32,
-                            child: CustomButton(
-                              text: "Uredi",
-                              onPressed: () {
-                                GoRouter.of(context).pushNamed(
-                                  'edit_car',
-                                  pathParameters: {
-                                    'carId': car.id,
-                                  },
-                                );
-                              },
-                              icon: "akar-icons:edit",
-                              fontSize: 11,
-                              iconSize: 17,
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 0,
-                                horizontal: 20,
-                              ),
-                              outlined: true,
-                              borderRadius: 30.0,
-                            ),
-                          ),
-                        ],
+                      SectionHeader(
+                        title: "Detalji o vozilu",
+                        buttonText: "Uredi",
+                        onPressed: () {
+                          GoRouter.of(context).pushNamed(
+                            'edit_car',
+                            pathParameters: {'carId': car.id},
+                          );
+                        },
                       ),
 
                       const SizedBox(height: 15),
-                      buildDetailsRow('Marka', car.brand, 'Model', car.model),
-                      buildDetailsRow('Godina proizvodnje', car.year.toString(), 'Mjenjač', car.transmission),
-                      buildDetailsRow('Kilometraža', formattedMileage(car.mileage), 'Vrsta goriva', car.fuel_type),
-                      buildDetailsRow('Snaga motora', '${car.horsepower} KS', 'Zapremina motora', '${car.displacement / 1000} L'),
-                      buildDetailsRow('VIN', '${car.vin}', 'Registracijska oznaka', car.license_plate),
-                      buildDetailsRow('Pogon', '${car.drive_type}', 'Kilovati', car.horsepower != null ? (car.horsepower! * 0.745).toStringAsFixed(0) + " kW" : 'N/A'),
+
+                      DetailsRow("Marka", car.brand, "Model", car.model),
+                      DetailsRow("Godina", car.year.toString(), "Mjenjač",
+                          car.transmission),
+                      DetailsRow("Kilometraža", formatMileage(car.mileage),
+                          "Gorivo", car.fuel_type),
+                      DetailsRow(
+                          "Snaga", "${car.horsepower} KS", "Zapremina",
+                          "${car.displacement / 1000} L"),
+                      DetailsRow("VIN", car.vin, "Registracija",
+                          car.license_plate),
+                      DetailsRow(
+                          "Pogon",
+                          car.drive_type,
+                          "Kilovati",
+                          car.horsepower != null
+                              ? "${(car.horsepower! * 0.745).toStringAsFixed(0)} kW"
+                              : "N/A"),
+
                       const SizedBox(height: 20),
 
-                      SizedBox(
-                        width: double.infinity,
-                        child: FilledButton.tonal(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: Colors.red.withOpacity(0.1),
-                            padding: const EdgeInsets.symmetric(vertical: 15),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              _isLoading
-                                  ? SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: Colors.red,
-                                ),
-                              )
-                                  : const IconifyIcon(
-                                icon: "fluent:delete-32-regular",
-                                size: 20,
-                                color: Colors.red,
-                              ),
-                              SizedBox(width: _isLoading ? 0 : 10),
-                              Text(
-                                _isLoading ? '' : 'Obriši vozilo',
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.red,
-                                ),
-                              ),
-                            ],
-                          ),
-
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (BuildContext context) {
-                                return AlertDialog(
-                                  backgroundColor: Colors.white,
-                                  title: const Text('Potvrda brisanja'),
-                                  content: const Text('Jeste li sigurni da želite obrisati ovo vozilo? Ova akcija se ne može poništiti.'),
-                                  actions: <Widget>[
-                                    TextButton(
-                                      child: const Text('Otkaži'),
-                                      onPressed: () {
-                                        GoRouter.of(context).pop();
-                                      },
-                                    ),
-                                    TextButton(
-                                      child: const Text(
-                                        'Obriši',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                      onPressed: () {
-                                        GoRouter.of(context).pop();
-                                        _deleteCar();
-                                      },
-                                    ),
-                                  ],
-                                );
-                              },
-                            );
-                          },
-                        ),
+                      DeleteCarButton(
+                        isLoading: isLoading,
+                        onConfirmDelete: deleteCar,
                       ),
                     ],
                   ),
@@ -385,75 +249,26 @@ class CarDetailsScreen extends ConsumerWidget {
             ],
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Greška: $err')),
       ),
     );
   }
+}
 
-  Container buildDetailsRow(String labelLeft, String textLeft, String labelRight, String textRight) {
-    return Container(
-      padding: const EdgeInsets.only(bottom: 10, top: 10),
-      decoration: BoxDecoration(
-        border: BorderDirectional(bottom: BorderSide(color: AppColors.divider))
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                labelLeft,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  color: Color(0xFF3E3E3E),
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                textLeft,
-                style: TextStyle(
-                  fontWeight: FontWeight.w400,
-                  fontSize: 12,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                labelRight,
-                style: TextStyle(
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                  color: Color(0xFF3E3E3E),
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                textRight,
-                style: TextStyle(
-                  fontWeight: FontWeight.w400,
-                  fontSize: 12,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
-  Widget _infoChip({
-    required String icon,
-    required String label,
-    required String text,
-  }) {
+class InfoChip extends StatelessWidget {
+  final String icon;
+  final String label;
+  final String text;
+
+  const InfoChip({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.text,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surfaceCard,
@@ -461,15 +276,18 @@ class CarDetailsScreen extends ConsumerWidget {
       ),
       padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 18),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(15),
             ),
-            child: IconifyIcon(icon: icon, size: 22, color: Color(0xFF252525)),
+            child: IconifyIcon(
+              icon: icon,
+              size: 22,
+              color: const Color(0xFF252525),
+            ),
           ),
           const SizedBox(width: 10),
           Column(
@@ -501,3 +319,419 @@ class CarDetailsScreen extends ConsumerWidget {
     );
   }
 }
+
+class DetailsRow extends StatelessWidget {
+  final String labelLeft;
+  final String textLeft;
+  final String labelRight;
+  final String textRight;
+
+  const DetailsRow(
+      this.labelLeft, this.textLeft, this.labelRight, this.textRight,
+      {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(color: AppColors.divider),
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          DetailColumn(labelLeft, textLeft, CrossAxisAlignment.start),
+          DetailColumn(labelRight, textRight, CrossAxisAlignment.end),
+        ],
+      ),
+    );
+  }
+}
+
+class DetailColumn extends StatelessWidget {
+  final String label;
+  final String text;
+  final CrossAxisAlignment align;
+
+  const DetailColumn(this.label, this.text, this.align, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: align,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontWeight: FontWeight.w600,
+            fontSize: 14,
+            color: Color(0xFF3E3E3E),
+          ),
+        ),
+        const SizedBox(height: 3),
+        Text(
+          text,
+          style: const TextStyle(
+            fontWeight: FontWeight.w400,
+            fontSize: 12,
+            color: AppColors.textPrimary,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class SectionHeader extends StatelessWidget {
+  final String title;
+  final String buttonText;
+  final VoidCallback onPressed;
+
+  const SectionHeader({
+    super.key,
+    required this.title,
+    required this.buttonText,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 18,
+            color: Colors.black,
+            fontFamily: "MPlus1",
+            fontWeight: FontWeight.w400,
+            letterSpacing: 1.2,
+            shadows: [
+              Shadow(
+                color: Colors.black54,
+                offset: Offset(0, 0),
+                blurRadius: 1,
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 32,
+          child: CustomButton(
+            onPressed: onPressed,
+            icon: "solar:arrow-right-broken",
+            iconSize: 17,
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 6),
+            text: buttonText,
+            outlined: true,
+            borderRadius: 20,
+            fontSize: 11,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class DeleteCarButton extends StatelessWidget {
+  final bool isLoading;
+  final VoidCallback onConfirmDelete;
+
+  const DeleteCarButton({
+    super.key,
+    required this.isLoading,
+    required this.onConfirmDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: FilledButton.tonal(
+        style: FilledButton.styleFrom(
+          backgroundColor: Colors.red.withOpacity(0.1),
+          padding: const EdgeInsets.symmetric(vertical: 15),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        onPressed: () {
+          showDialog(
+            context: context,
+            builder: (_) => AlertDialog(
+              backgroundColor: Colors.white,
+              title: const Text('Potvrda brisanja'),
+              content: const Text(
+                'Jeste li sigurni da želite obrisati ovo vozilo? Ova akcija je trajna.',
+              ),
+              actions: [
+                TextButton(
+                  child: const Text('Otkaži'),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                TextButton(
+                  child: const Text('Obriši', style: TextStyle(color: Colors.red)),
+                  onPressed: () {
+                    Navigator.pop(context);
+                    onConfirmDelete();
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (isLoading)
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.red,
+                ),
+              )
+            else
+              const IconifyIcon(
+                icon: "fluent:delete-32-regular",
+                size: 20,
+                color: Colors.red,
+              ),
+            if (!isLoading) const SizedBox(width: 10),
+            if (!isLoading)
+              const Text(
+                'Obriši vozilo',
+                style: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: Colors.red,
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+
+class ServicesOverviewCost extends ConsumerStatefulWidget {
+  final String carId;
+
+  const ServicesOverviewCost({super.key, required this.carId});
+
+  @override
+  ConsumerState<ServicesOverviewCost> createState() => _ServicesOverviewCostState();
+}
+
+class _ServicesOverviewCostState extends ConsumerState<ServicesOverviewCost> {
+  String selectedPeriod = 'year';
+  String selectedYear = DateTime.now().year.toString();
+
+  @override
+  Widget build(BuildContext context) {
+    final statsAsync = ref.watch(
+      serviceStatsProvider((
+      carId: widget.carId,
+      period: selectedPeriod,
+      year: selectedYear,
+      )),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Pregled potrošnje",
+              style: TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                color: AppColors.textPrimary,
+              ),
+            ),
+            PeriodDropdown(
+              selectedPeriod: selectedPeriod,
+              onChanged: (value) {
+                setState(() {
+                  selectedPeriod = value!;
+                  if (value != "year") selectedYear = DateTime.now().year.toString();
+                });
+              },
+            ),
+          ],
+        ),
+
+        if (selectedPeriod == 'year')
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: YearDropdown(
+                selectedYear: selectedYear,
+                onChanged: (year) => setState(() => selectedYear = year!),
+              ),
+            ),
+          ),
+
+        const SizedBox(height: 15),
+
+        statsAsync.when(
+          loading: () => const Center(child: CircularProgressIndicator()),
+          error: (err, _) =>
+              Center(child: Text("Greška: $err")),
+          data: (data) {
+            final totalCost = data['totalCost'] ?? 0;
+            final totalServices = data['totalServices'] ?? 0;
+
+            if (totalCost == 0 && totalServices == 0) {
+              return const Padding(
+                padding: EdgeInsets.only(bottom: 20),
+                child: CustomAlert(
+                  type: AlertType.info,
+                  title: 'Obavijest',
+                  message: 'Nema dostupnih podataka za odabrane filtere.',
+                ),
+              );
+            }
+
+            return Padding(
+              padding: const EdgeInsets.only(left: 5, right: 40, bottom: 15),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  ChartLine(
+                    title: 'Ukupni trošak',
+                    number: totalCost.toInt(),
+                    rate: 1,
+                    key: const Key("cost"),
+                  ),
+                  const SizedBox(height: 10),
+                  ChartLine(
+                    title: 'Ukupno odrađenih servisa',
+                    number: totalServices.toInt(),
+                    rate: 0.7,
+                    key: const Key("services"),
+                    reversed: true,
+                    suffix: " Servisa",
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class PeriodDropdown extends StatelessWidget {
+  final String selectedPeriod;
+  final ValueChanged<String?> onChanged;
+
+  const PeriodDropdown({
+    super.key,
+    required this.selectedPeriod,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final items = const [
+      DropdownMenuItem(value: 'all', child: Text('Cijelo vrijeme')),
+      DropdownMenuItem(value: 'month', child: Text('Posljednji mjesec')),
+      DropdownMenuItem(value: 'year', child: Text('Po godini')),
+    ];
+
+    const textStyle = TextStyle(
+      fontWeight: FontWeight.w600,
+      fontSize: 12,
+      color: AppColors.textPrimary,
+    );
+
+    return DropdownButtonHideUnderline(
+      child: DropdownButton<String>(
+        value: selectedPeriod,
+        items: items,
+        onChanged: onChanged,
+        dropdownColor: Colors.white,
+        style: textStyle,
+        isDense: true,
+        icon: const IconifyIcon(
+          icon: 'famicons:chevron-down-outline',
+          color: AppColors.textPrimary,
+          size: 15,
+        ),
+      ),
+    );
+  }
+}
+
+class YearDropdown extends StatelessWidget {
+  final String selectedYear;
+  final ValueChanged<String?> onChanged;
+
+  const YearDropdown({
+    super.key,
+    required this.selectedYear,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final currentYear = DateTime.now().year;
+
+    final items = List.generate(
+      10,
+          (i) => DropdownMenuItem(
+        value: (currentYear - i).toString(),
+        child: Text((currentYear - i).toString()),
+      ),
+    );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: AppColors.surfaceCard,
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text("Godina:"),
+          DropdownButtonHideUnderline(
+            child: DropdownButton<String>(
+              value: selectedYear,
+              items: items,
+              onChanged: onChanged,
+              dropdownColor: Colors.white,
+              menuMaxHeight: 200,
+              icon: Padding(
+                padding: const EdgeInsets.only(left: 5.0),
+                child: const IconifyIcon(
+                  icon: 'famicons:chevron-down-outline',
+                  size: 16,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 12,
+                color: AppColors.textPrimary,
+                letterSpacing: 1,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+

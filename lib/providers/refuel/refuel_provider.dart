@@ -64,7 +64,6 @@ final refuelByIdProvider = FutureProvider.autoDispose
 });
 
 
-
 // ----------------------------------------------------------------------
 // Stream providers
 // ----------------------------------------------------------------------
@@ -90,13 +89,12 @@ final refuelGraphProvider = FutureProvider.family
   final service = _getServiceInstance(ref);
   if (service == null) return {'totalCost': 0, 'totalLiters': 0};
 
-  // Ako year nije broj (string se šalje), parsiraj ga sigurno
   final parsedYear = int.tryParse(args.year);
 
   final res = await service.getFuelSummaryForPeriod(
     carId: args.carId,
     period: args.period,
-    year: parsedYear, // koristi se samo ako je period == 'year'
+    year: parsedYear,
   );
 
   return res;

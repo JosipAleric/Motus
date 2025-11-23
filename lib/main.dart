@@ -30,8 +30,8 @@ import 'providers/user_provider.dart';
 
 final drawerProvider = StateProvider<Function?>((ref) => null);
 
-/// Pomoćna klasa koja obavještava GoRouter kada se tok promijeni
-/// (u ovom slučaju, kada se promijeni stanje autentifikacije)
+// Pomoćna klasa koja obavještava GoRouter kada se tok promijeni
+// (u ovom slučaju, kada se promijeni stanje autentifikacije)
 class GoRouterRefreshStream extends ChangeNotifier {
   GoRouterRefreshStream(Stream<dynamic> stream) {
     notifyListeners();
@@ -125,7 +125,7 @@ final _router = GoRouter(
           builder: (_, __) => const RefuelsScreen(),
           routes: [
             GoRoute(
-              path: '/add_refuel/:carId',
+              path: 'add_refuel/:carId',
               name: 'add_refuel',
               builder: (_, state) {
                 final carId = state.pathParameters['carId']!;
@@ -300,7 +300,6 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Odmah ažuriraj index kad se ovisnosti promijene (uključujući navigaciju)
     _updateSelectedIndex();
   }
 
@@ -308,7 +307,6 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> {
   void initState() {
     super.initState();
     // Registracija callback funkcije za drawer, SAMO JEDNOM
-    // OVO JE SIGURNO JER SE POZIVA PRIJE PRVOG BUILD-A
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(drawerProvider.notifier).state = openDrawer;
     });

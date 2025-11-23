@@ -96,7 +96,7 @@ class ServiceModel {
       'type': type,
       'service_notes': service_notes,
       'price': price,
-      'date': date.toIso8601String(),
+      'date': Timestamp.fromDate(date),
       'mileage_at_service': mileage_at_service,
       'service_center': service_center,
       'invoiceUrl': invoiceUrl,
